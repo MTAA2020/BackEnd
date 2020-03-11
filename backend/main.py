@@ -2,9 +2,16 @@ from flask import Flask, make_response, request, jsonify
 import json
 from peewee import *
 from playhouse.postgres_ext import *
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 
 database = PostgresqlDatabase('postgres', **{'host': '127.0.0.1', 'user': 'postgres', 'password': 'postgres'})
 app = Flask(__name__)
+
+app.config['JWT_SECRET_KEY'] = 'supersecret'
+jwt = JWTManager(app)
 
 class UnknownField(object):
     def __init__(self, *_, **__): pass
@@ -100,3 +107,19 @@ def login():
         if not password:
             return jsonify({'msg': 'Missing password'}) , 400
         return jsonify({'msg': 'Login sucessful'}) , 200
+        if username != 'test' or password != 'test':
+            return jsonify({"msg": "Bad username or password"}), 401
+
+            # Identity can be any data that is json serializable
+        access_token = create_access_token(identity=username)
+        return jsonify(access_token=access_token), 200
+
+"""Takto by sme mali pouzivat token aby sa nestalo
+ze po precitani nasej API dokumentacie nam niekto vymaze vsetky knihy."""
+
+@app.route('/protected', methods=['GET'])
+@jwt_required
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
