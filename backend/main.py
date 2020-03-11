@@ -115,7 +115,9 @@ def login():
         return jsonify(access_token=access_token), 200
 
 """Takto by sme mali pouzivat token aby sa nestalo
-ze po precitani nasej API dokumentacie nam niekto vymaze vsetky knihy."""
+ze po precitani nasej API dokumentacie nam niekto vymaze vsetky knihy.
+https://flask-jwt-extended.readthedocs.io/en/stable/basic_usage/?fbclid=IwAR3f3g7Xoenh9kRXIEGEBawMLF92MhioAz4WLW2jU12sMAPwO2k4XzZfRoE
+https://jwt.io/introduction/?fbclid=IwAR0rh3GF8SvXcvQ0kFeLg6HhnIAqMRmhkjAJ3hSMt_AkeGEM_rK_khpJw7M"""
 
 @app.route('/protected', methods=['GET'])
 @jwt_required
