@@ -44,9 +44,10 @@ class User(BaseModel):
     email = CharField(null=True)
     passwordhash = CharField(null=True)
     username = CharField(null=True)
-
+    token = CharField(null=True)
+    
     class Meta:
-        table_name = 'user'
+        table_name = 'useri'
 
 class Deposit(BaseModel):
     amount = DoubleField(null=True)
@@ -125,3 +126,10 @@ def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
+
+try:
+    prihlaseny = User.get(User.username == 'user2')
+    if prihlaseny.passwordhash == 'user1':
+        print('si prihlaseny')
+except:
+    print('Debilko')
