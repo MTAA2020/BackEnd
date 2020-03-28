@@ -47,7 +47,7 @@ def protected():
     return jsonify(logged_in_as=current_user), 200
 
 try:
-    prihlaseny = User.get(User.username == 'user2')
+    prihlaseny = modely.User.get(modely.User.username == 'user2')
     if prihlaseny.passwordhash == 'user1':
         print('si prihlaseny')
 except:
