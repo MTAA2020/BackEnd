@@ -24,9 +24,9 @@ def registration():
     passw = request.json.get('password', None)
     email = request.json.get('email',None)
     admin = request.json.get('admin',None)
-    access_token = create_access_token(identity=uname)
 
-    userid=model.User.create(username=uname,passwordhash=passw,token=access_token,email=email,balance=0,admin=admin)
+
+    userid=model.User.create(username=uname,passwordhash=passw,email=email,balance=0,admin=admin)
     if userid:
         return jsonify({'msg': 'Success'}), 200
     
