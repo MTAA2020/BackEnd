@@ -13,7 +13,7 @@ class BaseModel(Model):
 
 class Author(BaseModel):
     about = CharField(null=True)
-    name = CharField(null=True)
+    name = CharField(null=True,unique=True)
 
     class Meta:
         table_name = 'author'
@@ -30,12 +30,14 @@ class Book(BaseModel):
         table_name = 'book'
 
 class User(BaseModel):
-    admin = BooleanField(null=True)
-    balance = DoubleField(null=True)
-    email = CharField(null=True)
+    id = IdentityField(null=True,unique=True)
+    username = CharField(null=True,unique=True)
     passwordhash = CharField(null=True)
     token = CharField(null=True)
-    username = CharField(null=True)
+    email = CharField(null=True)
+    balance = DoubleField(null=True)
+    admin = BooleanField(null=True)
+
 
     class Meta:
         table_name = 'user'

@@ -4,7 +4,7 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
-import modely
+import model
 
 app = Flask(__name__)
 
@@ -20,19 +20,22 @@ def login():
         if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-        username = request.json.get('username',None)
-        password = request.json.get('password', None)
-        if not username:
-            return jsonify({'msg': 'Missing username'}) , 400
-        if not password:
-            return jsonify({'msg': 'Missing password'}) , 400
-        return jsonify({'msg': 'Login sucessful'}) , 200
-        if username != 'test' or password != 'test':
-            return jsonify({"msg": "Bad username or password"}), 401
+        uname = request.json.get('username',None)
+        passw = request.json.get('password', None)
 
-            # Identity can be any data that is json serializable
-        access_token = create_access_token(identity=username)
-        return jsonify(access_token=access_token), 200
+
+        if not uname:
+            return jsonify({'msg': 'Missing username'}) , 400
+        if not passw:
+            return jsonify({'msg': 'Missing password'}) , 400
+
+        user = model.User.select().where(model.User.username == uname).get()
+        if uname == user.username and passw == user.passwordhash:
+            access_token = create_access_token(identity=uname)
+            return jsonify(access_token=access_token), 200
+
+        return jsonify({'msg': 'Wrong details'}) , 400
+
 
 """Takto by sme mali pouzivat token aby sa nestalo
 ze po precitani nasej API dokumentacie nam niekto vymaze vsetky knihy.
