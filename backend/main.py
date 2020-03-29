@@ -25,12 +25,19 @@ def registration():
     email = request.json.get('email',None)
     admin = request.json.get('admin',None)
 
+<<<<<<< HEAD
     try: 
         userid=model.User.create(username=uname,passwordhash=passw,email=email,balance=0,admin=admin)
         if userid:
             return jsonify({'msg': 'Success'}), 200
     except:
         return jsonify({'msg': 'Username already taken'}), 500
+=======
+
+    userid=model.User.create(username=uname,passwordhash=passw,email=email,balance=0,admin=admin)
+    if userid:
+        return jsonify({'msg': 'Success'}), 200
+>>>>>>> 0e07039f1648784301696e980097496decdcc469
     
 
 @app.route('/login', methods=['POST'])
