@@ -19,16 +19,18 @@ def hello_world():
 def registration():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
-    
+
     uname = request.json.get('username',None)
     passw = request.json.get('password', None)
     email = request.json.get('email',None)
     admin = request.json.get('admin',None)
-    access_token = create_access_token(identity=uname)
 
-    userid=model.User.create(username=uname,passwordhash=passw,token=access_token,email=email,balance=0,admin=admin)
-    if userid:
-        return jsonify({'msg': 'Success'}), 200
+    try: 
+        userid=model.User.create(username=uname,passwordhash=passw,email=email,balance=0,admin=admin)
+        if userid:
+            return jsonify({'msg': 'Success'}), 200
+    except:
+        return jsonify({'msg': 'Username already taken'}), 500
     
 
 @app.route('/login', methods=['POST'])
@@ -45,29 +47,79 @@ def login():
         if not passw:
             return jsonify({'msg': 'Missing password'}) , 400
 
-        user = model.User.select().where(model.User.username == uname).get()
-        if uname == user.username and passw == user.passwordhash:
-            access_token = create_access_token(identity=uname)
-            return jsonify(access_token=access_token), 200
-
+        try:
+            user = model.User.select().where(model.User.username == uname).get()
+            if uname == user.username and passw == user.passwordhash:
+                access_token = create_access_token(identity=uname)
+                return jsonify(access_token=access_token), 200
+        except:
+            return jsonify({'msg': 'Wrong username or password'})
         return jsonify({'msg': 'Wrong details'}) , 400
-
-
-"""Takto by sme mali pouzivat token aby sa nestalo
-ze po precitani nasej API dokumentacie nam niekto vymaze vsetky knihy.
-https://flask-jwt-extended.readthedocs.io/en/stable/basic_usage/?fbclid=IwAR3f3g7Xoenh9kRXIEGEBawMLF92MhioAz4WLW2jU12sMAPwO2k4XzZfRoE
-https://jwt.io/introduction/?fbclid=IwAR0rh3GF8SvXcvQ0kFeLg6HhnIAqMRmhkjAJ3hSMt_AkeGEM_rK_khpJw7M"""
-
-@app.route('/protected', methods=['GET'])
+"""
+@app.route('/addAuthor', methods=['POST'])
 @jwt_required
-def protected():
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+def addAuthor():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
 
-try:
-    prihlaseny = modely.User.get(modely.User.username == 'user2')
-    if prihlaseny.passwordhash == 'user1':
-        print('si prihlaseny')
-except:
-    print('Debilko')
+@app.route('/addBook', methods=['POST'])
+@jwt_required
+def addBook():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+            
+@app.route('/addPDF', methods=['POST'])
+@jwt_required
+def addPDF():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+            
+@app.route('/bookEdit', methods=['PUT'])
+@jwt_required
+def bookEdit():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+            
+@app.route('/bookDelete', methods=['DELETE'])
+@jwt_required
+def bookDelete():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+            
+@app.route('/purchase', methods=['POST'])
+@jwt_required
+def purchase():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+            
+@app.route('/deposit', methods=['POST'])
+@jwt_required
+def deposit():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+            
+@app.route('/getBooks', methods=['GET'])
+def getBooks():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+
+@app.route('/getMyBooks', methods=['GET'])
+def getMyBooks():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+
+@app.route('/getBookDetail', methods=['GET'])
+def getBookDetail():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+
+@app.route('/readBook', methods=['GET'])
+def readBook():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+            
+@app.route('/seePurchases', methods=['GET'])
+def seePurchases():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+"""
