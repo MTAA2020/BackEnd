@@ -55,71 +55,128 @@ def login():
         except:
             return jsonify({'msg': 'Wrong username or password'})
         return jsonify({'msg': 'Wrong details'}) , 400
-"""
+
+
 @app.route('/addAuthor', methods=['POST'])
 @jwt_required
 def addAuthor():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+    
+    name = request.json.get('name',None)
+    about = request.json.get('about',None)
+    token = request.json.get('token',None)
+    userid = request.json.get('user',None)
+
+
 
 @app.route('/addBook', methods=['POST'])
 @jwt_required
 def addBook():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+
+    name = request.json.get('name',None)
+    title = request.json.get('title',None)
+    date = request.json.get('date',None)
+    price = request.json.get('price',None)
+    genres = request.json.get('genres',None)
+    token = request.json.get('token',None)
+    userid = request.json.get('user',None)
             
 @app.route('/addPDF', methods=['POST'])
 @jwt_required
 def addPDF():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+    
+    bookid = request.json.get('book_id',None)
+    pdfname = request.json.get('pdfname',None)
+    pdf = request.json.get('pdf',None)
+    token = request.json.get('token',None)
+    userid = request.json.get('user',None)
             
 @app.route('/bookEdit', methods=['PUT'])
 @jwt_required
 def bookEdit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+
+    name = request.json.get('name',None)
+    title = request.json.get('title',None)
+    date = request.json.get('date',None)
+    price = request.json.get('price',None)
+    genres = request.json.get('genres',None)
+    token = request.json.get('token',None)
+    userid = request.json.get('user',None)
             
 @app.route('/bookDelete', methods=['DELETE'])
 @jwt_required
 def bookDelete():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+
+    bookid = request.json.get('book_id',None)
+    token = request.json.get('token',None)
+    userid = request.json.get('user',None)
             
 @app.route('/purchase', methods=['POST'])
 @jwt_required
 def purchase():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+
+    userid = request.json.get('user',None)
+    book = request.json.get('book',None)
+    date = request.json.get('date',None)
+    token = request.json.get('token',None)
             
 @app.route('/deposit', methods=['POST'])
 @jwt_required
 def deposit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+
+    userid = request.json.get('user',None)
+    amount = request.json.get('amount',None)
+    token = request.json.get('token',None)
             
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+    
+
 
 @app.route('/getMyBooks', methods=['GET'])
 def getMyBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
+    userid = request.json.get('user',None)
+    token = request.json.get('token',None)
+
 @app.route('/getBookDetail', methods=['GET'])
 def getBookDetail():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
+    bookid= request.json.get('book_id',None)
+
 @app.route('/readBook', methods=['GET'])
+@jwt_required
 def readBook():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+    
+    bookid = request.json.get('book_id',None)
+    userid = request.json.get('user',None)
+    token = request.json.get('token',None)
             
 @app.route('/seePurchases', methods=['GET'])
 def seePurchases():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
-"""
+
+    userid = request.json.get('user',None)
+    token = request.json.get('token',None)
