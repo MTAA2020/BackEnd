@@ -63,11 +63,23 @@ def addAuthor():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
     
-    name = request.json.get('name',None)
-    about = request.json.get('about',None)
+    author_name = request.json.get('name',None)
+    author_about = request.json.get('about',None)
     token = request.json.get('token',None)
     userid = request.json.get('user',None)
 
+    current_user=get_jwt_identity()
+    
+    user = model.User.select().where(model.User.username == current_user).get()
+
+    if user.admin is True:
+        try:
+            model.Author.create(name=author_name,about=author_about)
+            return jsonify({'msg': 'success'}) , 200
+        except:
+            return jsonify({'msg': 'Something went wrong'}) , 400
+    else:
+        return jsonify({'msg': 'No permission'}) , 400
 
 
 @app.route('/addBook', methods=['POST'])
@@ -76,13 +88,29 @@ def addBook():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-    name = request.json.get('name',None)
+    authorname = request.json.get('name',None)
     title = request.json.get('title',None)
     date = request.json.get('date',None)
     price = request.json.get('price',None)
     genres = request.json.get('genres',None)
     token = request.json.get('token',None)
     userid = request.json.get('user',None)
+
+    current_user=get_jwt_identity()
+
+    user = model.User.select().where(model.User.username == current_user).get()
+
+    
+    if user.admin is True:
+        try:
+            auth = model.Author.select().where(model.Author.name == authorname).get()
+            model.Book.create(author=auth,title=title,published=date,rating=0,price=price,genres=genres)
+            return jsonify({'msg': 'success'}) , 200
+        except:
+            return jsonify({'msg': 'Something went wrong'}) , 400
+    else:
+        return jsonify({'msg': 'No permission'}) , 400
+
             
 @app.route('/addPDF', methods=['POST'])
 @jwt_required

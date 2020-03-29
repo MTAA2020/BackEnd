@@ -12,19 +12,21 @@ class BaseModel(Model):
         database = database
 
 class Author(BaseModel):
-    about = CharField(null=True)
+    id = IdentityField(null=True,unique=True)
     name = CharField(null=True,unique=True)
+    about = CharField(null=True)
 
     class Meta:
         table_name = 'author'
 
 class Book(BaseModel):
+    id = IdentityField(null=True,unique=True)
     author = ForeignKeyField(column_name='author_id', field='id', model=Author, null=True)
-    genres = ArrayField(field_class=CharField, null=True)
-    price = DoubleField(null=True)
+    title = CharField(null=True)
     published = DateField(null=True)
     rating = DoubleField(null=True)
-    title = CharField(null=True)
+    price = DoubleField(null=True)
+    genres = ArrayField(field_class=CharField, null=True)
 
     class Meta:
         table_name = 'book'
@@ -43,6 +45,7 @@ class User(BaseModel):
         table_name = 'user'
 
 class Deposit(BaseModel):
+    id = IdentityField(null=True,unique=True)
     amount = DoubleField(null=True)
     user = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
 
@@ -68,6 +71,7 @@ class Pdf(BaseModel):
         primary_key = False
 
 class Purchase(BaseModel):
+    id = IdentityField(null=True,unique=True)
     book = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
     p_datetime = DateField(null=True)
     user = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
@@ -76,6 +80,7 @@ class Purchase(BaseModel):
         table_name = 'purchase'
 
 class Review(BaseModel):
+    id = IdentityField(null=True,unique=True)
     book = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
     comment = TextField(null=True)
     rating = DoubleField(null=True)
