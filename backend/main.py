@@ -15,6 +15,22 @@ jwt = JWTManager(app)
 def hello_world():
     return 'Hello, World!'
 
+@app.route('/register', methods=['POST'])
+def registration():
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+    
+    uname = request.json.get('username',None)
+    passw = request.json.get('password', None)
+    email = request.json.get('email',None)
+    admin = request.json.get('admin',None)
+    access_token = create_access_token(identity=uname)
+
+    userid=model.User.create(username=uname,passwordhash=passw,token=access_token,email=email,balance=0,admin=admin)
+    if userid:
+        return jsonify({'msg': 'Success'}), 200
+    
+
 @app.route('/login', methods=['POST'])
 def login():
         if not request.is_json:

@@ -34,7 +34,7 @@ class User(BaseModel):
     username = CharField(null=True,unique=True)
     passwordhash = CharField(null=True)
     token = CharField(null=True)
-    email = CharField(null=True)
+    email = CharField(null=True,unique=True)
     balance = DoubleField(null=True)
     admin = BooleanField(null=True)
 
