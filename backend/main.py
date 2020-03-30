@@ -200,14 +200,21 @@ def purchase():
         return jsonify({'msg': "Couldn't create purchase"}), 500
             
 @app.route('/deposit', methods=['POST'])
-@jwt_required
+#@jwt_required
 def deposit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
     userid = request.json.get('user',None)
     amount = request.json.get('amount',None)
-    token = request.json.get('token',None)
+    date = request.json.get('date',None)
+ #   token = request.json.get('token',None)
+    try:
+        deposit = model.Deposit.create(user_id=userid,amount=amount,d_datetime=date)
+        if deposit:
+            return jsonify({'msg':'Success'}), 200
+    except:
+        return jsonify({'msg':'Sorry something went wrong'}), 400
             
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
