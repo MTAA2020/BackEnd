@@ -244,13 +244,26 @@ def getMyBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-    userid = request.json.get('user',None)
+    userid = request.json.get('user_id',None)
     token = request.json.get('token',None)
+    response = {}
+    try:
+        myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id)
+        response['pocet'] = len(myBooks)
+        response['knihy'] = []
+        if myBooks:
+            for book in myBooks:
+                cover = model.Jpg.get(model.Jpg.book_id == book.id)
+                response['knihy'].append({
+                    'id': book.id,
+                    'title': book.title,
+                    'cover': (cover.jpg).tobytes().decode('utf8').replace("'",'"')
+                })
+            return jsonify({'msg':'Success','knihy':response}), 200
+        
+    except:
+        return jsonify({'msg':'wrong'}),400
 
-    myBooks = model.User.select().join(model.Purchase).where(model.Purchase.user_id == userid)
-    for nieco in myBooks:
-        print(nieco.book_id)
-    return jsonify({'msg':'wrong'}),400
 @app.route('/getBookDetail', methods=['GET'])
 def getBookDetail():
     if not request.is_json:
