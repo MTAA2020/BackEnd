@@ -5,7 +5,7 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 import model
-import datetime
+
 
 app = Flask(__name__)
 
@@ -220,6 +220,22 @@ def deposit():
 def getBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
+    response = {}
+    try:
+        books = model.Book.select()
+        response['pocet'] = len(books)
+        response['knihy'] = []
+        for book in books:
+            cover = model.Jpg.get(model.Jpg.book_id == book.id)
+            response['knihy'].append({
+                'id': book.id,
+                'title': book.title,
+                'cover': (cover.jpg).tobytes().decode('utf8').replace("'",'"')
+            })
+        if books:
+            return jsonify({'msg':'success','knihy':response}), 200
+    except:
+        return print("pepek")
     
 
 
