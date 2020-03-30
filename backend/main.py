@@ -5,6 +5,7 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 import model
+import datetime
 
 app = Flask(__name__)
 
@@ -53,7 +54,7 @@ def login():
                 access_token = create_access_token(identity=uname)
                 return jsonify(access_token=access_token), 200
         except:
-            return jsonify({'msg': 'Wrong username or password'})
+            return jsonify({'msg': 'Wrong username or password'}), 400
         return jsonify({'msg': 'Wrong details'}) , 400
 
 
@@ -181,7 +182,7 @@ def bookDelete():
 
             
 @app.route('/purchase', methods=['POST'])
-@jwt_required
+#@jwt_required
 def purchase():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
@@ -189,7 +190,14 @@ def purchase():
     userid = request.json.get('user',None)
     book = request.json.get('book',None)
     date = request.json.get('date',None)
-    token = request.json.get('token',None)
+#    token = request.json.get('token',None)
+    
+    try: 
+        purchase = model.Purchase.create(user_id=userid,book_id=book,p_datetime=date)
+        if purchase:
+            return jsonify({'msg': 'Success'}), 200
+    except:
+        return jsonify({'msg': "Couldn't create purchase"}), 500
             
 @app.route('/deposit', methods=['POST'])
 @jwt_required
