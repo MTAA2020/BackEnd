@@ -247,6 +247,10 @@ def getMyBooks():
     userid = request.json.get('user',None)
     token = request.json.get('token',None)
 
+    myBooks = model.User.select().join(model.Purchase).where(model.Purchase.user_id == userid)
+    for nieco in myBooks:
+        print(nieco.book_id)
+    return jsonify({'msg':'wrong'}),400
 @app.route('/getBookDetail', methods=['GET'])
 def getBookDetail():
     if not request.is_json:
