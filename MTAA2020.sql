@@ -1,28 +1,28 @@
 CREATE TABLE "book" (
   "id" SERIAL PRIMARY KEY,
   "author_id" int,
-  "title" varchar,
-  "published" date,
-  "rating" float,
-  "price" float,
+  "title" varchar NOT NULL,
+  "published" date NOT NULL,
+  "rating" float NOT NULL,
+  "price" float NOT NULL,
   "genres" varchar[]
 );
 
 CREATE TABLE "pdf" (
-  "book_id" int,
+  "book_id" int UNIQUE,
   "pdfname" varchar,
   "pdf" bytea
 );
 
 CREATE TABLE "jpg" (
-  "book_id" int,
+  "book_id" int UNIQUE,
   "jpgname" varchar,
   "jpg" bytea
 );
 
 CREATE TABLE "author" (
   "id" SERIAL PRIMARY KEY,
-  "name" varchar,
+  "name" varchar UNIQUE NOT NULL,
   "about" varchar
 );
 
@@ -30,7 +30,6 @@ CREATE TABLE "user" (
   "id" SERIAL PRIMARY KEY,
   "username" varchar UNIQUE NOT NULL,
   "passwordhash" varchar NOT NULL,
-  "token" varchar,
   "email" varchar UNIQUE NOT NULL,
   "balance" float,
   "admin" boolean
@@ -48,7 +47,8 @@ CREATE TABLE "review" (
 CREATE TABLE "deposit" (
   "id" SERIAL PRIMARY KEY,
   "user_id" int,
-  "amount" float
+  "amount" float,
+  "d_datetime" timestamp
 );
 
 CREATE TABLE "purchase" (

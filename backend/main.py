@@ -130,6 +130,7 @@ def bookEdit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
+    bookid=request.json.get('book_id',None)
     name = request.json.get('name',None)
     title = request.json.get('title',None)
     date = request.json.get('date',None)
@@ -137,6 +138,22 @@ def bookEdit():
     genres = request.json.get('genres',None)
     token = request.json.get('token',None)
     userid = request.json.get('user',None)
+
+    current_user=get_jwt_identity()
+
+    user = model.User.select().where(model.User.username == current_user).get()
+
+    
+    if user.admin is True:
+        try:
+            #TODO
+            return jsonify({'msg': 'success'}) , 200
+        except:
+            return jsonify({'msg': 'Something went wrong'}) , 400
+    else:
+        return jsonify({'msg': 'No permission'}) , 400
+
+
             
 @app.route('/bookDelete', methods=['DELETE'])
 @jwt_required
@@ -145,8 +162,23 @@ def bookDelete():
             return jsonify({'msg': 'Wrong format'}), 400
 
     bookid = request.json.get('book_id',None)
-    token = request.json.get('token',None)
     userid = request.json.get('user',None)
+
+    current_user=get_jwt_identity()
+
+    user = model.User.select().where(model.User.username == current_user).get()
+
+    
+    if user.admin is True:
+        try:
+            book = model.Book.select().where(model.Book.id == bookid).get()
+            book.delete_instance()
+            return jsonify({'msg': 'success'}) , 200
+        except:
+            return jsonify({'msg': 'Something went wrong'}) , 400
+    else:
+        return jsonify({'msg': 'No permission'}) , 400
+
             
 @app.route('/purchase', methods=['POST'])
 @jwt_required

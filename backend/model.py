@@ -35,7 +35,6 @@ class User(BaseModel):
     id = IdentityField(null=True,unique=True)
     username = CharField(null=True,unique=True)
     passwordhash = CharField(null=True)
-    token = CharField(null=False)
     email = CharField(null=True,unique=True)
     balance = DoubleField(null=True)
     admin = BooleanField(null=True)
