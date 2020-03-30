@@ -288,3 +288,20 @@ def seePurchases():
 
     userid = request.json.get('user',None)
     token = request.json.get('token',None)
+    response = {}
+    try:
+        purchasy = model.Purchase.select(model.Purchase.user_id == userid)
+        response['pocet'] = len(purchasy)
+        response['purchasy'] = []
+        for purchas in purchasy:
+            kniha = model.Book.select(model.Book.id == purchas.book_id)
+            response['purchas'].append({
+                'title':kniha.title,
+                'datum':purchas.p_datetime,
+                'cena':kniha.price
+            })
+        if purchasy:
+            return jsonify({'msg':success}), 200
+    except:
+        return jsonify({'msg':'Something went wrong'}), 400
+
