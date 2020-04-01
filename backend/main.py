@@ -1,5 +1,6 @@
 from flask import Flask, make_response, request, jsonify
 import json
+import os
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
@@ -16,6 +17,7 @@ jwt = JWTManager(app)
 def hello_world():
     return 'Hello, World!'
 
+#Funguje
 @app.route('/register', methods=['POST'])
 def registration():
     if not request.is_json:
@@ -33,7 +35,7 @@ def registration():
     except:
         return jsonify({'msg': 'Username already taken'}), 500
     
-
+#Funguje
 @app.route('/login', methods=['POST'])
 def login():
         if not request.is_json:
@@ -52,12 +54,12 @@ def login():
             user = model.User.select().where(model.User.username == uname).get()
             if uname == user.username and passw == user.passwordhash:
                 access_token = create_access_token(identity=uname)
-                return jsonify(access_token=access_token), 200
+                return jsonify({'access_token':access_token,'msg':'Success','balance':user.balance}), 200
         except:
             return jsonify({'msg': 'Wrong username or password'}), 400
         return jsonify({'msg': 'Wrong details'}) , 400
 
-
+#Funguje
 @app.route('/addAuthor', methods=['POST'])
 @jwt_required
 def addAuthor():
@@ -80,7 +82,7 @@ def addAuthor():
     else:
         return jsonify({'msg': 'No permission'}) , 400
 
-
+#Funguje
 @app.route('/addBook', methods=['POST'])
 @jwt_required
 def addBook():
@@ -92,72 +94,64 @@ def addBook():
     date = request.json.get('date',None)
     price = request.json.get('price',None)
     genres = request.json.get('genres',None)
-    jpgname=request.json.get('jpgname',str)
-    pdfname=request.json.get('pdfname',str)
-    jpg = request.json.get('jpg',bytearray)
-    pdf = request.json.get('pdf',bytearray)
-    
 
     current_user=get_jwt_identity()
 
     user = model.User.select().where(model.User.username == current_user).get()
     
-
-    auth = model.Author.select().where(model.Author.name == authorname).get()
-    bookobj=model.Book.create(author=auth,title=title,published=date,rating=0,price=price,genres=genres)
-    model.Jpg.create(book=bookobj,jpg=jpg,jpgname=jpgname)
-    model.Pdf.create(book=bookobj,pdf=pdf,pdfname=pdfname)
     if user.admin is True:
         try:
             auth = model.Author.select().where(model.Author.name == authorname).get()
-            bookobj=model.Book.create(author=auth,title=title,published=date,rating=0,price=price,genres=genres)
-            model.Jpg.create(book=bookobj,jpg=jpg,jpgname=jpgname)
-            model.Pdf.create(book=bookobj,pdf=pdf,pdfname=pdfname)
-            return jsonify({'msg': 'success'}) , 200
+            bookobj = model.Book.create(author=auth,title=title,published=date,rating=0,price=price,genres=genres)
+            return jsonify({'msg': 'Success',"book_id" : str(bookobj.id)}) , 200
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
         return jsonify({'msg': 'No permission'}) , 400
 
 
-
+#Treba urobit
 @app.route('/addpdf', methods=['POST'])
-@jwt_required
+#@jwt_required
 def addPDF():
-    pass
+    currentDirectory = os.getcwd().replace(os.sep, '/')+"/PDF/"
+    data=request.get_data()
 
-
+#Treba urobit
 @app.route('/addjpg', methods=['POST'])
 @jwt_required
 def addJPG():
-    pass
+    currentDirectory = os.getcwd().replace(os.sep, '/')+"/JPG/"
+    data=request.get_data()
 
 
 
-            
+#Funguje            
 @app.route('/bookEdit', methods=['PUT'])
 @jwt_required
 def bookEdit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-    name = request.json.get('name',None)
-    title = request.json.get('title',None)
+    book_id = request.json.get('book_id',int)
+    name = request.json.get('name',str)
+    title = request.json.get('title',str)
     date = request.json.get('date',None)
-    price = request.json.get('price',None)
+    price = request.json.get('price',float)
     genres = request.json.get('genres',None)
 
     current_user=get_jwt_identity()
 
     user = model.User.select().where(model.User.username == current_user).get()
 
-    
+    authorobj=model.Author.select().where(model.Author.name == name).get()
+
     if user.admin is True:
         try:
-            book=model.Book.select().where(model.Book.title == title).get()
-            book.name=name
+            book=model.Book.select().where(model.Book.id == book_id).get()
+            book.name=authorobj
             book.title=title
-            book.date=date
+            book.published=date
             book.price=price
             book.genres=genres
             book.save()
@@ -168,7 +162,7 @@ def bookEdit():
         return jsonify({'msg': 'No permission'}) , 400
 
 
-            
+#Treba vyskusat            
 @app.route('/bookDelete', methods=['DELETE'])
 @jwt_required
 def bookDelete():
@@ -185,6 +179,10 @@ def bookDelete():
     if user.admin is True:
         try:
             book = model.Book.select().where(model.Book.id == bookid).get()
+            query = model.Purchase.delete().where(model.Purchase.book_id == book.id)
+            query.execute()
+            query = model.Review.delete().where(model.Review.book_id == book.id)
+            query.execute()
             book.delete_instance()
             return jsonify({'msg': 'success'}) , 200
         except:
@@ -192,60 +190,74 @@ def bookDelete():
     else:
         return jsonify({'msg': 'No permission'}) , 400
 
-            
+#Funguje            
 @app.route('/purchase', methods=['POST'])
 @jwt_required
 def purchase():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-    book = request.json.get('book',None)
+    book_id = request.json.get('book_id',None)
     date = request.json.get('date',None)
 
     current_user=get_jwt_identity()
 
-    user = model.User.select().where(model.User.username == current_user).get()
+    userobj = model.User.select().where(model.User.username == current_user).get()
+    bookobj = model.Book.select().where(model.Book.id == book_id).get()
 
-    try: 
-        purchase = model.Purchase.create(user_id=user.id,book_id=book,p_datetime=date)
-        if purchase:
-            return jsonify({'msg': 'Success'}), 200
-    except:
-        return jsonify({'msg': "Couldn't create purchase"}), 500
+    if userobj.balance > bookobj.price:
+        try: 
+            purchase = model.Purchase.create(user_id=userobj.id,book_id=bookobj,p_datetime=date)
+            new_balance=userobj.balance-bookobj.price
+            userobj.balance=new_balance
+            userobj.save()
+            if purchase:
+                return jsonify({'msg': 'Success'}), 200
+        except:
+            return jsonify({'msg': "Couldn't create purchase"}), 500
+    else:
+        return jsonify({'msg':'Not enough credit'}), 406
             
+#Funguje
 @app.route('/deposit', methods=['POST'])
 @jwt_required
 def deposit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-    userid = request.json.get('user',None)
     amount = request.json.get('amount',None)
     date = request.json.get('date',None)
-    
+
+    current_user=get_jwt_identity()
+
+    userobj = model.User.select().where(model.User.username == current_user).get()
+    currentbalance=float(userobj.balance)
+
     try:
-        deposit = model.Deposit.create(user_id=userid,amount=amount,d_datetime=date)
+        deposit = model.Deposit.create(user_id=userobj,amount=amount,d_datetime=date)
+        new_balance=currentbalance+float(amount)
+        userobj.balance=new_balance
+        userobj.save()
         if deposit:
             return jsonify({'msg':'Success'}), 200
     except:
         return jsonify({'msg':'Sorry something went wrong'}), 400
-            
+
+#Nefunguje           
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
     response = {}
-    strana = request.json('strana',int)
     try:
-        books = model.Book.select().paginate(strana,10)
+        books = model.Book.select()
         response['pocet'] = len(books)
         response['knihy'] = []
         for book in books:
-            cover = model.Jpg.get(model.Jpg.book_id == book.id)
             response['knihy'].append({
                 'id': book.id,
-                'title': book.title
-                #'cover': (cover.jpg).tobytes().decode('utf8').replace("'",'"')
+                'title': book.title,
+                'cover': TODO
             })
         if books:
             return jsonify({'msg':'success','knihy':response}), 200
@@ -253,32 +265,34 @@ def getBooks():
         return print("pepek")
     
 
-
+#Nefunguje
 @app.route('/getMyBooks', methods=['GET'])
+@jwt_required
 def getMyBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
     userid = request.json.get('user_id',None)
     response = {}
-    strana = request.json('strana',int)
     try:
-        myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id).paginate(strana,10)
+        myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id)
         response['pocet'] = len(myBooks)
         response['knihy'] = []
         if myBooks:
             for book in myBooks:
-                cover = model.Jpg.get(model.Jpg.book_id == book.id)
                 response['knihy'].append({
                     'id': book.id,
                     'title': book.title,
-                    'cover': (cover.jpg).tobytes().decode('utf8').replace("'",'"')
+                    'cover': TODO,
                 })
             return jsonify({'msg':'Success','knihy':response}), 200
         
     except:
         return jsonify({'msg':'wrong'}),400
 
+
+
+#Treba urobit
 @app.route('/getBookDetail', methods=['GET'])
 def getBookDetail():
     if not request.is_json:
@@ -289,9 +303,7 @@ def getBookDetail():
 
 
 
-
-
-
+#Treba urobit
 @app.route('/readBook', methods=['GET'])
 @jwt_required
 def readBook():
@@ -307,8 +319,9 @@ def readBook():
     mybook=model.Book.select().join(model.Purchase).where(model.Purchase.book_id == bookid).join(model.User).where(user == model.Purchase.user_id)
 
 
-            
+#Este nefunguje           
 @app.route('/seePurchases', methods=['GET'])
+@jwt_required
 def seePurchases():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
@@ -332,3 +345,9 @@ def seePurchases():
     except:
         return jsonify({'msg':'Something went wrong'}), 400
 
+
+#Treba urobit
+@app.route('/getBookDetail', methods=['GET'])
+@jwt_required
+def addReview():
+    pass
