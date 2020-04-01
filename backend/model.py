@@ -46,29 +46,12 @@ class User(BaseModel):
 class Deposit(BaseModel):
     id = IdentityField(null=True,unique=True)
     amount = DoubleField(null=True)
-    user = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
+    user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
     d_datetime=DateField(null=True)
 
     class Meta:
         table_name = 'deposit'
 
-class Jpg(BaseModel):
-    book = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
-    jpg = BlobField(null=True)
-    jpgname = CharField(null=True)
-
-    class Meta:
-        table_name = 'jpg'
-        primary_key = False
-
-class Pdf(BaseModel):
-    book = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
-    pdf = BlobField(null=True)
-    pdfname = CharField(null=True)
-
-    class Meta:
-        table_name = 'pdf'
-        primary_key = False
 
 class Purchase(BaseModel):
     id = IdentityField(null=True,unique=True)
@@ -81,11 +64,11 @@ class Purchase(BaseModel):
 
 class Review(BaseModel):
     id = IdentityField(null=True,unique=True)
-    book = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
+    book_id = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
     comment = TextField(null=True)
     rating = DoubleField(null=True)
     time = DateField(null=True)
-    user = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
+    user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
 
     class Meta:
         table_name = 'review'
