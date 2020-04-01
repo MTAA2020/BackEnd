@@ -66,8 +66,6 @@ def addAuthor():
     
     author_name = request.json.get('name',None)
     author_about = request.json.get('about',None)
-    token = request.json.get('token',None)
-    userid = request.json.get('user',None)
 
     current_user=get_jwt_identity()
     
@@ -94,8 +92,6 @@ def addBook():
     date = request.json.get('date',None)
     price = request.json.get('price',None)
     genres = request.json.get('genres',None)
-    token = request.json.get('token',None)
-    userid = request.json.get('user',None)
 
     current_user=get_jwt_identity()
 
@@ -131,14 +127,11 @@ def bookEdit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-    bookid=request.json.get('book_id',None)
     name = request.json.get('name',None)
     title = request.json.get('title',None)
     date = request.json.get('date',None)
     price = request.json.get('price',None)
     genres = request.json.get('genres',None)
-    token = request.json.get('token',None)
-    userid = request.json.get('user',None)
 
     current_user=get_jwt_identity()
 
@@ -147,7 +140,13 @@ def bookEdit():
     
     if user.admin is True:
         try:
-            #TODO
+            book=model.Book.select().where(model.Book.title == title).get()
+            book.name=name
+            book.title=title
+            book.date=date
+            book.price=price
+            book.genres=genres
+            book.save()
             return jsonify({'msg': 'success'}) , 200
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
@@ -163,7 +162,6 @@ def bookDelete():
             return jsonify({'msg': 'Wrong format'}), 400
 
     bookid = request.json.get('book_id',None)
-    userid = request.json.get('user',None)
 
     current_user=get_jwt_identity()
 
@@ -190,7 +188,6 @@ def purchase():
     userid = request.json.get('user',None)
     book = request.json.get('book',None)
     date = request.json.get('date',None)
-#    token = request.json.get('token',None)
     
     try: 
         purchase = model.Purchase.create(user_id=userid,book_id=book,p_datetime=date)
@@ -200,7 +197,7 @@ def purchase():
         return jsonify({'msg': "Couldn't create purchase"}), 500
             
 @app.route('/deposit', methods=['POST'])
-#@jwt_required
+@jwt_required
 def deposit():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
@@ -208,7 +205,7 @@ def deposit():
     userid = request.json.get('user',None)
     amount = request.json.get('amount',None)
     date = request.json.get('date',None)
- #   token = request.json.get('token',None)
+    
     try:
         deposit = model.Deposit.create(user_id=userid,amount=amount,d_datetime=date)
         if deposit:
@@ -245,7 +242,6 @@ def getMyBooks():
             return jsonify({'msg': 'Wrong format'}), 400
 
     userid = request.json.get('user_id',None)
-    token = request.json.get('token',None)
     response = {}
     try:
         myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id)
@@ -271,6 +267,12 @@ def getBookDetail():
 
     bookid= request.json.get('book_id',None)
 
+
+
+
+
+
+
 @app.route('/readBook', methods=['GET'])
 @jwt_required
 def readBook():
@@ -278,8 +280,14 @@ def readBook():
             return jsonify({'msg': 'Wrong format'}), 400
     
     bookid = request.json.get('book_id',None)
-    userid = request.json.get('user',None)
-    token = request.json.get('token',None)
+
+    current_user=get_jwt_identity()
+
+    user = model.User.select().where(model.User.username == current_user).get()
+
+    mybook=model.Book.select().join(model.Purchase).where(model.Purchase.book_id == bookid).join(model.User).where(user == model.Purchase.user_id)
+
+
             
 @app.route('/seePurchases', methods=['GET'])
 def seePurchases():

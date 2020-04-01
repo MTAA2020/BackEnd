@@ -47,6 +47,7 @@ class Deposit(BaseModel):
     id = IdentityField(null=True,unique=True)
     amount = DoubleField(null=True)
     user = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
+    d_datetime=DateField(null=True)
 
     class Meta:
         table_name = 'deposit'
