@@ -72,9 +72,9 @@ class Pdf(BaseModel):
 
 class Purchase(BaseModel):
     id = IdentityField(null=True,unique=True)
-    book = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
+    book_id = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
     p_datetime = DateField(null=True)
-    user = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
+    user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
 
     class Meta:
         table_name = 'purchase'

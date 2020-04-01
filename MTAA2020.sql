@@ -8,18 +8,6 @@ CREATE TABLE "book" (
   "genres" varchar[]
 );
 
-CREATE TABLE "pdf" (
-  "book_id" int UNIQUE,
-  "pdfname" varchar,
-  "pdf" bytea
-);
-
-CREATE TABLE "jpg" (
-  "book_id" int UNIQUE,
-  "jpgname" varchar,
-  "jpg" bytea
-);
-
 CREATE TABLE "author" (
   "id" SERIAL PRIMARY KEY,
   "name" varchar UNIQUE NOT NULL,
@@ -59,10 +47,6 @@ CREATE TABLE "purchase" (
 );
 
 ALTER TABLE "book" ADD FOREIGN KEY ("author_id") REFERENCES "author" ("id");
-
-ALTER TABLE "pdf" ADD FOREIGN KEY ("book_id") REFERENCES "book" ("id");
-
-ALTER TABLE "jpg" ADD FOREIGN KEY ("book_id") REFERENCES "book" ("id");
 
 ALTER TABLE "review" ADD FOREIGN KEY ("book_id") REFERENCES "book" ("id");
 
