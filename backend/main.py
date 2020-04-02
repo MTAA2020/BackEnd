@@ -266,9 +266,10 @@ def getBooks():
             return jsonify({'msg':'No more entries'}), 200
     except:
         return print("pepek")
+    return jsonify({'msg':'coco'}), 500
     
 
-#Funguje
+#Funguje - ese dorobit cover
 @app.route('/getMyBooks', methods=['GET'])
 @jwt_required
 def getMyBooks():
@@ -325,29 +326,32 @@ def readBook():
     mybook=model.Book.select().join(model.Purchase).where(model.Purchase.book_id == bookid).join(model.User).where(user == model.Purchase.user_id)
 
 
-#Este nefunguje           
+#Funguje           
 @app.route('/seePurchases', methods=['GET'])
 @jwt_required
 def seePurchases():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
-
-    userid = request.json.get('user',None)
-    token = request.json.get('token',None)
+    current_user = get_jwt_identity()
+    userid = model.User.get(model.User.username == current_user).id
     response = {}
+    print(userid)
     try:
-        purchasy = model.Purchase.select(model.Purchase.user_id == userid)
-        response['pocet'] = len(purchasy)
-        response['purchasy'] = []
-        for purchas in purchasy:
-            kniha = model.Book.select(model.Book.id == purchas.book_id)
-            response['purchas'].append({
-                'title':kniha.title,
-                'datum':purchas.p_datetime,
-                'cena':kniha.price
-            })
+        purchasy = model.Purchase.select().where(model.Purchase.user_id == userid)
         if purchasy:
-            return jsonify({'msg':success}), 200
+            response['pocet'] = len(purchasy)
+            response['purchasy'] = []
+            for purchas in purchasy:
+                print(purchas.book_id)
+                kniha = model.Book.select().where(model.Book.id == purchas.book_id).get()
+                response['purchasy'].append({
+                    'title':kniha.title,
+                    'datum':purchas.p_datetime,
+                    'cena':kniha.price
+                })
+            return jsonify({'msg':'success','knihy':response}), 200
+        else:
+            return jsonify({'msg':'No purchases'}), 200
     except:
         return jsonify({'msg':'Something went wrong'}), 400
 
