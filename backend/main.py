@@ -268,6 +268,30 @@ def getBooks():
         return print("pepek")
     return jsonify({'msg':'coco'}), 500
     
+@app.route('/getBookReviews', methods=['GET'])
+def getBookReviews():
+    if not request.is_json:
+        return jsonify({'msg': 'Wrong format'}), 400
+    bookid = request.json.get('book_id',int)
+    response = {}
+    strana = request.json.get('strana',int)
+    try:
+        reviews = model.Review.select().where(model.Review.book_id == bookid).paginate(strana,10)
+        response['pocet'] = len(reviews)
+        response['reviews'] = []
+        if reviews:
+            for review in reviews:
+                response['reviews'].append({
+                    'time': review.time,
+                    'rating': review.rating,
+                    'comment': review.comment
+                })
+            return jsonify({'msg':'Success','reviews':response}), 200
+        else:
+            return jsonify({'msg':'No more reviews'}), 200  
+    except:
+        return jsonify({'msg':'wrong'}),400
+    return jsonify({'msg':'coco'}),500
 
 #Funguje - ese dorobit cover
 @app.route('/getMyBooks', methods=['GET'])
