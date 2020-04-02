@@ -65,11 +65,10 @@ class Purchase(BaseModel):
 class Review(BaseModel):
     id = IdentityField(null=True,unique=True)
     book_id = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
-    comment = TextField(null=True)
-    rating = DoubleField(null=True)
-    time = DateField(null=True)
     user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
-
+    time = DateField(null=True)
+    rating = DoubleField(null=True)
+    comment = TextField(null=True)
     class Meta:
         table_name = 'review'
 

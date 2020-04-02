@@ -1,6 +1,7 @@
 from flask import Flask, make_response, request, jsonify
 import json
 import os
+import base64
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
@@ -112,17 +113,26 @@ def addBook():
 
 #Treba urobit
 @app.route('/addpdf', methods=['POST'])
-#@jwt_required
+@jwt_required
 def addPDF():
-    currentDirectory = os.getcwd().replace(os.sep, '/')+"/PDF/"
+
     data=request.get_data()
+
+    book_id=data[-8:]
+    book_id=int.from_bytes( book_id, "big", signed=False )
+    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
 
 #Treba urobit
 @app.route('/addjpg', methods=['POST'])
 @jwt_required
 def addJPG():
-    currentDirectory = os.getcwd().replace(os.sep, '/')+"/JPG/"
     data=request.get_data()
+    
+    book_id=data[-8:]
+    book_id=int.from_bytes( book_id, "big", signed=False )
+    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".jpg"
+
+
 
 
 
@@ -162,7 +172,7 @@ def bookEdit():
         return jsonify({'msg': 'No permission'}) , 400
 
 
-#Treba vyskusat            
+#Funguje           
 @app.route('/bookDelete', methods=['DELETE'])
 @jwt_required
 def bookDelete():
@@ -206,17 +216,22 @@ def purchase():
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
 
     if userobj.balance > bookobj.price:
-        try: 
-            purchase = model.Purchase.create(user_id=userobj.id,book_id=bookobj,p_datetime=date)
-            new_balance=userobj.balance-bookobj.price
-            userobj.balance=new_balance
-            userobj.save()
-            if purchase:
-                return jsonify({'msg': 'Success'}), 200
+        try:
+            purchase=model.Purchase.select().where(model.Purchase.book_id == bookobj, model.Purchase.user_id == userobj).get()
         except:
-            return jsonify({'msg': "Couldn't create purchase"}), 500
+            try: 
+                purchase = model.Purchase.create(user_id=userobj.id,book_id=bookobj,p_datetime=date)
+                new_balance=userobj.balance-bookobj.price
+                userobj.balance=new_balance
+                userobj.save()
+                if purchase:
+                    return jsonify({'msg': 'Success'}), 200
+            except:
+                return jsonify({'msg': "Couldn't create purchase"}), 500
     else:
         return jsonify({'msg':'Not enough credit'}), 406
+    
+    return jsonify({'msg':'You have already bought this book'}), 400
             
 #Funguje
 @app.route('/deposit', methods=['POST'])
@@ -243,22 +258,31 @@ def deposit():
     except:
         return jsonify({'msg':'Sorry something went wrong'}), 400
 
-#Funguje - este dorobit COVER      
+#Funguje     
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
     response = {}
     strana = request.json.get('strana',int)
+
     try:
         books = model.Book.select().paginate(strana,10)
         response['pocet'] = len(books)
         response['knihy'] = []
         for book in books:
+
+            #Treba osetrit pripad ked jpg sa nenajde na serveri
+            filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
+            with open(filename, "rb") as imageFile:
+                jpg_base64 = base64.b64encode(imageFile.read())
+
+            base64_string = jpg_base64.decode('ascii')
+
             response['knihy'].append({
                 'id': book.id,
                 'title': book.title,
- #               'cover': TODO
+                'cover' : base64_string
             })
         if books:
             return jsonify({'msg':'success','knihy':response}), 200
@@ -267,7 +291,8 @@ def getBooks():
     except:
         return print("pepek")
     return jsonify({'msg':'coco'}), 500
-    
+
+#Funguje    
 @app.route('/getBookReviews', methods=['GET'])
 def getBookReviews():
     if not request.is_json:
@@ -293,7 +318,7 @@ def getBookReviews():
         return jsonify({'msg':'wrong'}),400
     return jsonify({'msg':'coco'}),500
 
-#Funguje - ese dorobit cover
+#Funguje
 @app.route('/getMyBooks', methods=['GET'])
 @jwt_required
 def getMyBooks():
@@ -309,10 +334,17 @@ def getMyBooks():
         response['knihy'] = []
         if myBooks:
             for book in myBooks:
+
+                #Treba osetrit pripad ked jpg sa nenajde na serveri
+                filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
+                with open(filename, "rb") as imageFile:
+                    jpg_base64 = base64.b64encode(imageFile.read())
+                base64_string = jpg_base64.decode('ascii')
+
                 response['knihy'].append({
                     'id': book.id,
                     'title': book.title,
- #                   'cover': TODO,
+                    'cover': base64_string
                 })
             return jsonify({'msg':'Success','knihy':response}), 200
         else:
@@ -329,25 +361,36 @@ def getBookDetail():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
-    bookid= request.json.get('book_id',None)
+    book_id = request.json.get('book_id',int)
+    user_id = request.json.get('user_id',int)
 
 
 
 
-#Treba urobit
+
+
+#Treba upravit
 @app.route('/readBook', methods=['GET'])
 @jwt_required
 def readBook():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
     
-    bookid = request.json.get('book_id',None)
+    book_id = request.json.get('book_id',None)
 
     current_user=get_jwt_identity()
 
     user = model.User.select().where(model.User.username == current_user).get()
 
-    mybook=model.Book.select().join(model.Purchase).where(model.Purchase.book_id == bookid).join(model.User).where(user == model.Purchase.user_id)
+    #Neviem ci treba najprv zistit ci user uz kupil knihu alebo nie,tlacitko na readbook aj tak bude dostupny iba vtedy.
+
+    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
+    with open(filename, "rb") as pdfFile:
+        jpg_base64 = base64.b64encode(pdfFile.read())
+
+    base64_string = jpg_base64.decode('ascii')
+
+    return jsonify({'pdf': base64_string}), 200
 
 
 #Funguje           
@@ -380,8 +423,27 @@ def seePurchases():
         return jsonify({'msg':'Something went wrong'}), 400
 
 
-#Treba urobit
-@app.route('/getBookDetail', methods=['GET'])
+#Funguje
+@app.route('/addReview', methods=['POST'])
 @jwt_required
 def addReview():
-    pass
+    if not request.is_json:
+            return jsonify({'msg': 'Wrong format'}), 400
+
+    book_id = request.json.get('book_id',int)
+    comment = request.json.get('comment',str)
+    rating = request.json.get('rating',None)
+    time = request.json.get('time',None)
+
+    current_user=get_jwt_identity()
+
+    userobj = model.User.select().where(model.User.username == current_user).get()
+    bookobj = model.Book.select().where(model.Book.id == book_id).get()
+    try:
+        review=model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
+    except:
+        try:
+            newreview=model.Review.create(user_id=userobj,book_id=bookobj,time=time,comment=comment,rating=rating)
+            return jsonify({'msg': 'Success'}), 200
+        except:
+            return jsonify({'msg': 'Something went wrong'}) , 400
