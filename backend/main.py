@@ -243,39 +243,43 @@ def deposit():
     except:
         return jsonify({'msg':'Sorry something went wrong'}), 400
 
-#Nefunguje           
+#Funguje - este dorobit COVER      
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
     response = {}
+    strana = request.json.get('strana',int)
     try:
-        books = model.Book.select()
+        books = model.Book.select().paginate(strana,10)
         response['pocet'] = len(books)
         response['knihy'] = []
         for book in books:
             response['knihy'].append({
                 'id': book.id,
                 'title': book.title,
-                'cover': TODO
+ #               'cover': TODO
             })
         if books:
             return jsonify({'msg':'success','knihy':response}), 200
+        else:
+            return jsonify({'msg':'No more entries'}), 200
     except:
         return print("pepek")
     
 
-#Nefunguje
+#Funguje
 @app.route('/getMyBooks', methods=['GET'])
 @jwt_required
 def getMyBooks():
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
-
-    userid = request.json.get('user_id',None)
+    current_user = get_jwt_identity()
+    userid = model.User.get(model.User.username == current_user).id
     response = {}
+    strana = request.json.get('strana',int)
     try:
-        myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id)
+        myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id).paginate(strana,10)
         response['pocet'] = len(myBooks)
         response['knihy'] = []
         if myBooks:
@@ -283,12 +287,14 @@ def getMyBooks():
                 response['knihy'].append({
                     'id': book.id,
                     'title': book.title,
-                    'cover': TODO,
+ #                   'cover': TODO,
                 })
             return jsonify({'msg':'Success','knihy':response}), 200
-        
+        else:
+            return jsonify({'msg':'No more entries'}), 200  
     except:
         return jsonify({'msg':'wrong'}),400
+    return jsonify({'msg':'coco'}),500
 
 
 
