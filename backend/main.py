@@ -1,7 +1,7 @@
-from flask import Flask, make_response, request, jsonify
 import json
 import os
 import base64
+from flask import Flask, make_response, request, jsonify
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
@@ -10,7 +10,6 @@ import model
 
 
 app = Flask(__name__)
-
 app.config['JWT_SECRET_KEY'] = 'supersecret'
 jwt = JWTManager(app)
 
@@ -45,7 +44,6 @@ def login():
         uname = request.json.get('username',str)
         passw = request.json.get('password', str)
 
-
         if not uname:
             return jsonify({'msg': 'Missing username'}) , 400
         if not passw:
@@ -71,7 +69,6 @@ def addAuthor():
     author_about = request.json.get('about',str)
 
     current_user=get_jwt_identity()
-    
     user = model.User.select().where(model.User.username == current_user).get()
 
     if user.admin is True:
@@ -97,7 +94,6 @@ def addBook():
     genres = request.json.get('genres',None)
 
     current_user=get_jwt_identity()
-
     user = model.User.select().where(model.User.username == current_user).get()
     
     if user.admin is True:
@@ -115,7 +111,6 @@ def addBook():
 @app.route('/addpdf', methods=['POST'])
 @jwt_required
 def addPDF():
-
     data=request.get_data()
 
     book_id=data[-8:]
@@ -151,9 +146,7 @@ def bookEdit():
     genres = request.json.get('genres',None)
 
     current_user=get_jwt_identity()
-
     user = model.User.select().where(model.User.username == current_user).get()
-
     authorobj=model.Author.select().where(model.Author.name == name).get()
 
     if user.admin is True:
@@ -182,9 +175,7 @@ def bookDelete():
     bookid = request.json.get('book_id',None)
 
     current_user=get_jwt_identity()
-
     user = model.User.select().where(model.User.username == current_user).get()
-
     
     if user.admin is True:
         try:
@@ -211,7 +202,6 @@ def purchase():
     date = request.json.get('date',None)
 
     current_user=get_jwt_identity()
-
     userobj = model.User.select().where(model.User.username == current_user).get()
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
 
@@ -244,7 +234,6 @@ def deposit():
     date = request.json.get('date',None)
 
     current_user=get_jwt_identity()
-
     userobj = model.User.select().where(model.User.username == current_user).get()
     currentbalance=float(userobj.balance)
 
@@ -353,8 +342,6 @@ def getMyBooks():
         return jsonify({'msg':'wrong'}),400
     return jsonify({'msg':'coco'}),500
 
-
-
 #Treba urobit
 @app.route('/getBookDetail', methods=['GET'])
 def getBookDetail():
@@ -363,9 +350,6 @@ def getBookDetail():
 
     book_id = request.json.get('book_id',int)
     user_id = request.json.get('user_id',int)
-
-
-
 
 
 
@@ -379,9 +363,7 @@ def readBook():
     book_id = request.json.get('book_id',None)
 
     current_user=get_jwt_identity()
-
     user = model.User.select().where(model.User.username == current_user).get()
-
     #Neviem ci treba najprv zistit ci user uz kupil knihu alebo nie,tlacitko na readbook aj tak bude dostupny iba vtedy.
 
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
@@ -392,7 +374,6 @@ def readBook():
 
     return jsonify({'pdf': base64_string}), 200
 
-
 #Funguje           
 @app.route('/seePurchases', methods=['GET'])
 @jwt_required
@@ -402,7 +383,6 @@ def seePurchases():
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
     response = {}
-    print(userid)
     try:
         purchasy = model.Purchase.select().where(model.Purchase.user_id == userid)
         if purchasy:
@@ -422,7 +402,6 @@ def seePurchases():
     except:
         return jsonify({'msg':'Something went wrong'}), 400
 
-
 #Funguje
 @app.route('/addReview', methods=['POST'])
 @jwt_required
@@ -436,11 +415,11 @@ def addReview():
     time = request.json.get('time',None)
 
     current_user=get_jwt_identity()
-
     userobj = model.User.select().where(model.User.username == current_user).get()
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
+    
     try:
-        review=model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
+        model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
     except:
         try:
             newreview=model.Review.create(user_id=userobj,book_id=bookobj,time=time,comment=comment,rating=rating)

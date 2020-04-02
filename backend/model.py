@@ -39,7 +39,6 @@ class User(BaseModel):
     balance = DoubleField(null=True)
     admin = BooleanField(null=True)
 
-
     class Meta:
         table_name = 'user'
 
@@ -69,6 +68,6 @@ class Review(BaseModel):
     time = DateField(null=True)
     rating = DoubleField(null=True)
     comment = TextField(null=True)
+
     class Meta:
         table_name = 'review'
-
