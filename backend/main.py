@@ -342,7 +342,7 @@ def getMyBooks():
         return jsonify({'msg':'wrong'}),400
     return jsonify({'msg':'coco'}),500
 
-#Treba urobit
+#Treba upravit
 @app.route('/getBookDetail', methods=['GET'])
 def getBookDetail():
     if not request.is_json:
@@ -350,7 +350,19 @@ def getBookDetail():
 
     book_id = request.json.get('book_id',int)
     user_id = request.json.get('user_id',int)
+    #Mozno treba checknut ci user uz kupil tuto knihu,aby sme vedeli nastavit button na read alebo buy,alebo ked nebol login tak na login
 
+    try:
+        bookobj=model.Book.select().where(model.Book.id==book_id).get()
+        return jsonify({'book_id': bookobj.id,
+                        'author':bookobj.author,
+                        'title':bookobj.title,
+                        'published':bookobj.published,
+                        'rating':bookobj.rating,
+                        'price':bookobj.price,
+                        'genres:':bookobj.genres}), 200
+    except:
+        return jsonify({'msg':'No purchases'}), 200
 
 
 #Treba upravit
