@@ -17,11 +17,15 @@ jwt = JWTManager(app)
 def hello_world():
     return 'Hello, World!'
 
+@app.route('/teapot', methods=['GET'])
+def teapot():
+    return jsonify({'msg':'Your teapot is preparing a coffee.'}),418
+
 #Funguje
 @app.route('/register', methods=['POST'])
 def registration():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
     uname = request.json.get('username',str)
     passw = request.json.get('password', str)
@@ -31,7 +35,7 @@ def registration():
     try: 
         userid=model.User.create(username=uname,passwordhash=passw,email=email,balance=0,admin=admin)
         if userid:
-            return jsonify({'msg': 'Success'}), 200
+            return jsonify({'msg': 'Success'}), 201
     except:
         return jsonify({'msg': 'Username already taken'}), 500
     
@@ -39,15 +43,15 @@ def registration():
 @app.route('/login', methods=['POST'])
 def login():
         if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
         uname = request.json.get('username',str)
         passw = request.json.get('password', str)
 
         if not uname:
-            return jsonify({'msg': 'Missing username'}) , 400
+            return jsonify({'msg': 'Missing username'}) , 412
         if not passw:
-            return jsonify({'msg': 'Missing password'}) , 400
+            return jsonify({'msg': 'Missing password'}) , 412
 
         try:
             user = model.User.select().where(model.User.username == uname).get()
@@ -63,7 +67,7 @@ def login():
 @jwt_required
 def addAuthor():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
     
     author_name = request.json.get('name',str)
     author_about = request.json.get('about',str)
@@ -74,7 +78,7 @@ def addAuthor():
     if user.admin is True:
         try:
             model.Author.create(name=author_name,about=author_about)
-            return jsonify({'msg': 'success'}) , 200
+            return jsonify({'msg': 'success'}) , 201
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
@@ -85,7 +89,7 @@ def addAuthor():
 @jwt_required
 def addBook():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
     authorname = request.json.get('name',str)
     title = request.json.get('title',str)
@@ -100,7 +104,7 @@ def addBook():
         try:
             auth = model.Author.select().where(model.Author.name == authorname).get()
             bookobj = model.Book.create(author=auth,title=title,published=date,rating=0,price=price,genres=genres)
-            return jsonify({'msg': 'Success',"book_id" : str(bookobj.id)}) , 200
+            return jsonify({'msg': 'Success',"book_id" : str(bookobj.id)}) , 201
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
@@ -170,7 +174,7 @@ def bookEdit():
 @jwt_required
 def bookDelete():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
     bookid = request.json.get('book_id',None)
 
@@ -196,7 +200,7 @@ def bookDelete():
 @jwt_required
 def purchase():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
     book_id = request.json.get('book_id',None)
     date = request.json.get('date',None)
@@ -215,7 +219,7 @@ def purchase():
                 userobj.balance=new_balance
                 userobj.save()
                 if purchase:
-                    return jsonify({'msg': 'Success'}), 200
+                    return jsonify({'msg': 'Success'}), 201
             except:
                 return jsonify({'msg': "Couldn't create purchase"}), 500
     else:
@@ -228,7 +232,7 @@ def purchase():
 @jwt_required
 def deposit():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
     amount = request.json.get('amount',None)
     date = request.json.get('date',None)
@@ -251,7 +255,7 @@ def deposit():
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
     response = {}
     strana = request.json.get('strana',int)
 
@@ -276,16 +280,16 @@ def getBooks():
         if books:
             return jsonify({'msg':'success','knihy':response}), 200
         else:
-            return jsonify({'msg':'No more entries'}), 200
+            return jsonify({'msg':'No more entries'}), 204
     except:
-        return print("pepek")
-    return jsonify({'msg':'coco'}), 500
+        return jsonify({'msg':'No picture/book is present'}), 204
+    return jsonify({'msg':'Sorry something went wrong'}), 400
 
 #Funguje    
 @app.route('/getBookReviews', methods=['GET'])
 def getBookReviews():
     if not request.is_json:
-        return jsonify({'msg': 'Wrong format'}), 400
+        return jsonify({'msg': 'Bad Request format'}), 400
     bookid = request.json.get('book_id',int)
     response = {}
     strana = request.json.get('strana',int)
@@ -302,17 +306,17 @@ def getBookReviews():
                 })
             return jsonify({'msg':'Success','reviews':response}), 200
         else:
-            return jsonify({'msg':'No more reviews'}), 200  
+            return jsonify({'msg':'No more reviews'}), 204
     except:
-        return jsonify({'msg':'wrong'}),400
-    return jsonify({'msg':'coco'}),500
+        return jsonify({'msg':"Sorry, can't find reviews"}),404
+    return jsonify({'msg':'Sorry, something went wrong'}),400
 
 #Funguje
 @app.route('/getMyBooks', methods=['GET'])
 @jwt_required
 def getMyBooks():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
     response = {}
@@ -337,16 +341,16 @@ def getMyBooks():
                 })
             return jsonify({'msg':'Success','knihy':response}), 200
         else:
-            return jsonify({'msg':'No more entries'}), 200  
+            return jsonify({'msg':'No more entries'}), 204
     except:
-        return jsonify({'msg':'wrong'}),400
-    return jsonify({'msg':'coco'}),500
+        return jsonify({'msg':"Sorry, can't find your books"}),404
+    return jsonify({'msg':'Sorry, something went wrong'}),400
 
 #Treba upravit
 @app.route('/getBookDetail', methods=['GET'])
 def getBookDetail():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
     book_id = request.json.get('book_id',int)
     user_id = request.json.get('user_id',int)
@@ -370,7 +374,7 @@ def getBookDetail():
 @jwt_required
 def readBook():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
     
     book_id = request.json.get('book_id',None)
 
@@ -391,7 +395,7 @@ def readBook():
 @jwt_required
 def seePurchases():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
     response = {}
@@ -410,7 +414,7 @@ def seePurchases():
                 })
             return jsonify({'msg':'success','knihy':response}), 200
         else:
-            return jsonify({'msg':'No purchases'}), 404
+            return jsonify({'msg':'No purchases'}), 204
     except:
         return jsonify({'msg':'Something went wrong'}), 400
 
@@ -419,7 +423,7 @@ def seePurchases():
 @jwt_required
 def addReview():
     if not request.is_json:
-            return jsonify({'msg': 'Wrong format'}), 400
+            return jsonify({'msg': 'Bad Request format'}), 400
 
     book_id = request.json.get('book_id',int)
     comment = request.json.get('comment',str)
