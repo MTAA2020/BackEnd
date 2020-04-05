@@ -55,8 +55,8 @@ def login():
                 access_token = create_access_token(identity=uname)
                 return jsonify({'access_token':access_token,'msg':'Success','balance':user.balance}), 200
         except:
-            return jsonify({'msg': 'Wrong username or password'}), 400
-        return jsonify({'msg': 'Wrong details'}) , 400
+            return jsonify({'msg': 'Wrong username or password'}), 403
+        return jsonify({'msg': 'Wrong details'}) , 403
 
 #Funguje
 @app.route('/addAuthor', methods=['POST'])
@@ -78,7 +78,7 @@ def addAuthor():
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
-        return jsonify({'msg': 'No permission'}) , 400
+        return jsonify({'msg': 'No permission'}) , 403
 
 #Funguje
 @app.route('/addBook', methods=['POST'])
@@ -104,7 +104,7 @@ def addBook():
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
-        return jsonify({'msg': 'No permission'}) , 400
+        return jsonify({'msg': 'No permission'}) , 403
 
 
 #Treba urobit
@@ -162,7 +162,7 @@ def bookEdit():
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
-        return jsonify({'msg': 'No permission'}) , 400
+        return jsonify({'msg': 'No permission'}) , 403
 
 
 #Funguje           
@@ -189,7 +189,7 @@ def bookDelete():
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
-        return jsonify({'msg': 'No permission'}) , 400
+        return jsonify({'msg': 'No permission'}) , 403
 
 #Funguje            
 @app.route('/purchase', methods=['POST'])
@@ -362,7 +362,7 @@ def getBookDetail():
                         'price':bookobj.price,
                         'genres:':bookobj.genres}), 200
     except:
-        return jsonify({'msg':'No purchases'}), 200
+        return jsonify({'msg':'Not found'}), 404
 
 
 #Treba upravit
@@ -410,7 +410,7 @@ def seePurchases():
                 })
             return jsonify({'msg':'success','knihy':response}), 200
         else:
-            return jsonify({'msg':'No purchases'}), 200
+            return jsonify({'msg':'No purchases'}), 404
     except:
         return jsonify({'msg':'Something went wrong'}), 400
 
