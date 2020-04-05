@@ -221,7 +221,7 @@ def purchase():
     else:
         return jsonify({'msg':'Not enough credit'}), 406
     
-    return jsonify({'msg':'You have already bought this book'}), 400
+    return jsonify({'msg':'You have already bought this book'}), 406
             
 #Funguje
 @app.route('/deposit', methods=['POST'])
