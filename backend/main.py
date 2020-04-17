@@ -116,10 +116,11 @@ def addBook():
 @jwt_required
 def addPDF():
     data=request.get_data()
-
+    
     book_id=data[-8:]
     book_id=int.from_bytes( book_id, "big", signed=False )
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
+
 
 #Treba urobit
 @app.route('/addjpg', methods=['POST'])
@@ -129,7 +130,7 @@ def addJPG():
     
     book_id=data[-8:]
     book_id=int.from_bytes( book_id, "big", signed=False )
-    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".jpg"
+    filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
 
 
 
@@ -442,3 +443,30 @@ def addReview():
             return jsonify({'msg': 'Success'}), 200
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
+
+@app.route('/jpg', methods=['GET'])
+def getjpg():
+
+    if not request.is_json:
+            return jsonify({'msg': 'Bad Request format'}), 400
+
+    book_id = request.json.get('book_id',int)
+
+    filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
+    file=open(filename,"rb")
+    bajty=file.read()
+    return bajty
+
+
+@app.route('/pdf', methods=['GET'])
+def getpdf():
+
+    if not request.is_json:
+            return jsonify({'msg': 'Bad Request format'}), 400
+
+    book_id = request.json.get('book_id',int)
+
+    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
+    file=open(filename,"rb")
+    bajty=file.read()
+    return bajty
