@@ -255,10 +255,9 @@ def deposit():
 #Funguje     
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
+   
     response = {}
-    strana = request.json.get('strana',int)
+    strana = request.args.get('strana',type=int)
 
     try:
         books = model.Book.select().paginate(strana,10)
