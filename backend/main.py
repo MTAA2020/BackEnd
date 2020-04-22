@@ -260,7 +260,7 @@ def getBooks():
     strana = request.args.get('strana',type=int)
 
     try:
-        books = model.Book.select().paginate(strana,10)
+        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
         response['pocet'] = len(books)
         response['knihy'] = []
         for book in books:
@@ -275,7 +275,13 @@ def getBooks():
             response['knihy'].append({
                 'id': book.id,
                 'title': book.title,
-                'cover' : base64_string
+                'cover' : base64_string,
+                'author': book.author.name,
+                'about': book.author.about,
+                'published': book.published,
+                'rating': book.rating,
+                'price': book.price,
+                'genres': book.genres,
             })
         if books:
             return jsonify({'msg':'success','knihy':response}), 200
@@ -288,11 +294,10 @@ def getBooks():
 #Funguje    
 @app.route('/getBookReviews', methods=['GET'])
 def getBookReviews():
-    if not request.is_json:
-        return jsonify({'msg': 'Bad Request format'}), 400
-    bookid = request.json.get('book_id',int)
+
+    bookid = request.args.get('book_id',type=int)
     response = {}
-    strana = request.json.get('strana',int)
+    strana = request.args.get('strana',type=int)
     try:
         reviews = model.Review.select().where(model.Review.book_id == bookid).paginate(strana,10)
         response['pocet'] = len(reviews)
@@ -315,14 +320,13 @@ def getBookReviews():
 @app.route('/getMyBooks', methods=['GET'])
 @jwt_required
 def getMyBooks():
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
+
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
     response = {}
-    strana = request.json.get('strana',int)
+    strana = request.args.get('strana',type=int)
     try:
-        myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id).paginate(strana,10)
+        myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id).join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
         response['pocet'] = len(myBooks)
         response['knihy'] = []
         if myBooks:
@@ -335,10 +339,16 @@ def getMyBooks():
                 base64_string = jpg_base64.decode('ascii')
 
                 response['knihy'].append({
-                    'id': book.id,
-                    'title': book.title,
-                    'cover': base64_string
-                })
+                'id': book.id,
+                'title': book.title,
+                'cover' : base64_string,
+                'author': book.author.name,
+                'about': book.author.about,
+                'published': book.published,
+                'rating': book.rating,
+                'price': book.price,
+                'genres': book.genres,
+            })
             return jsonify({'msg':'Success','knihy':response}), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
@@ -346,27 +356,7 @@ def getMyBooks():
         return jsonify({'msg':"Sorry, can't find your books"}),404
     return jsonify({'msg':'Sorry, something went wrong'}),400
 
-#Treba upravit
-@app.route('/getBookDetail', methods=['GET'])
-def getBookDetail():
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
 
-    book_id = request.json.get('book_id',int)
-    user_id = request.json.get('user_id',int)
-    #Mozno treba checknut ci user uz kupil tuto knihu,aby sme vedeli nastavit button na read alebo buy,alebo ked nebol login tak na login
-
-    try:
-        bookobj=model.Book.select().where(model.Book.id==book_id).get()
-        return jsonify({'book_id': bookobj.id,
-                        'author':bookobj.author,
-                        'title':bookobj.title,
-                        'published':bookobj.published,
-                        'rating':bookobj.rating,
-                        'price':bookobj.price,
-                        'genres:':bookobj.genres}), 200
-    except:
-        return jsonify({'msg':'Not found'}), 404
 
 
 #Treba upravit
@@ -394,8 +384,7 @@ def readBook():
 @app.route('/seePurchases', methods=['GET'])
 @jwt_required
 def seePurchases():
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
+
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
     response = {}
@@ -442,6 +431,111 @@ def addReview():
             return jsonify({'msg': 'Success'}), 200
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
+
+@app.route('/searchbook', methods=['GET'])
+def searchbook():
+    response= {}
+    hladanie = request.args.get('hladanie',str)
+    try:
+        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).where((model.Book.title.iregexp(hladanie))|(model.Author.name.iregexp(hladanie)))
+        response['pocet'] = len(books)
+        response['knihy'] = []
+
+        for book in books:
+            #Treba osetrit pripad ked jpg sa nenajde na serveri
+            filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
+            with open(filename, "rb") as imageFile:
+                jpg_base64 = base64.b64encode(imageFile.read())
+
+            base64_string = jpg_base64.decode('ascii')
+
+            #if kategoria in book.genres:
+            response['knihy'].append({
+                'id': book.id,
+                'title': book.title,
+                'cover' : base64_string,
+                'author': book.author.name,
+                'about': book.author.about,
+                'published': book.published,
+                'rating': book.rating,
+                'price': book.price,
+                'genres': book.genres,
+            })
+        if books:
+            return jsonify({'msg':'success','knihy':response}), 200
+        else:
+            return jsonify({'msg':'No more entries'}), 204
+    except:
+        return jsonify({'msg':'No picture/book is present'}), 204
+    return jsonify({'msg':'Sorry something went wrong'}), 400
+
+
+
+@app.route('/searchauthor', methods=['GET'])
+def searchauthor():
+    response={}
+    hladanie = request.args.get('hladanie',str)
+    try:
+        authors = model.Author.select().where(model.Author.name.iregexp(hladanie))
+        response['pocet'] = len(authors)
+        response['autory'] = []
+
+        for author in authors:
+            response['autory'].append({
+                'id': author.id,
+                'name': author.name,
+            })
+        if authors:
+            return jsonify({'msg':'success','knihy':response}), 200
+        else:
+            return jsonify({'msg':'No more entries'}), 204
+    except:
+        return jsonify({'msg':'No picture/book is present'}), 204
+    return jsonify({'msg':'Sorry something went wrong'}), 400
+
+
+
+@app.route('/getBookCategory', methods=['GET'])
+def getBooksbycategory():
+   
+    response = {}
+    strana = request.args.get('strana',type=int)
+    kategoria = request.args.get('kategoria',type=str)
+    try:
+        books = model.Book.select().where(model.Book.genres.contains(kategoria)).join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
+        response['pocet'] = len(books)
+        response['knihy'] = []
+        for book in books:
+            print(book.genres)
+            #Treba osetrit pripad ked jpg sa nenajde na serveri
+            filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
+            with open(filename, "rb") as imageFile:
+                jpg_base64 = base64.b64encode(imageFile.read())
+
+            base64_string = jpg_base64.decode('ascii')
+
+            #if kategoria in book.genres:
+            response['knihy'].append({
+                'id': book.id,
+                'title': book.title,
+                'cover' : base64_string,
+                'author': book.author.name,
+                'about': book.author.about,
+                'published': book.published,
+                'rating': book.rating,
+                'price': book.price,
+                'genres': book.genres,
+            })
+
+        if books:
+            return jsonify({'msg':'success','knihy':response}), 200
+        else:
+            return jsonify({'msg':'No more entries'}), 204
+    except:
+        return jsonify({'msg':'No picture/book is present'}), 204
+    return jsonify({'msg':'Sorry something went wrong'}), 400
+
+
 
 @app.route('/jpg', methods=['GET'])
 def getjpg():
