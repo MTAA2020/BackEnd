@@ -255,13 +255,11 @@ def deposit():
 @app.route('/getBooks', methods=['GET'])
 def getBooks():
    
-    response = {}
+    response = []
     strana = request.args.get('strana',type=int)
 
     try:
         books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
-        response['pocet'] = len(books)
-        response['knihy'] = []
         for book in books:
 
             #Treba osetrit pripad ked jpg sa nenajde na serveri
@@ -271,10 +269,10 @@ def getBooks():
 
             base64_string = jpg_base64.decode('ascii')
 
-            response['knihy'].append({
+            response.append({
                 'id': book.id,
                 'title': book.title,
-                'cover' : base64_string,
+                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': book.published,
@@ -295,15 +293,14 @@ def getBooks():
 def getBookReviews():
 
     bookid = request.args.get('book_id',type=int)
-    response = {}
+    response = []
     strana = request.args.get('strana',type=int)
     try:
         reviews = model.Review.select().where(model.Review.book_id == bookid).paginate(strana,10)
-        response['pocet'] = len(reviews)
-        response['reviews'] = []
+
         if reviews:
             for review in reviews:
-                response['reviews'].append({
+                response.append({
                     'time': review.time,
                     'rating': review.rating,
                     'comment': review.comment
@@ -322,12 +319,11 @@ def getMyBooks():
 
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
-    response = {}
+    response = []
     strana = request.args.get('strana',type=int)
     try:
         myBooks = model.Book.select().join(model.Purchase).where(model.Purchase.book_id == model.Book.id).join(model.User).where(userid == model.Purchase.user_id).join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
-        response['pocet'] = len(myBooks)
-        response['knihy'] = []
+
         if myBooks:
             for book in myBooks:
 
@@ -337,10 +333,10 @@ def getMyBooks():
                     jpg_base64 = base64.b64encode(imageFile.read())
                 base64_string = jpg_base64.decode('ascii')
 
-                response['knihy'].append({
+                response.append({
                 'id': book.id,
                 'title': book.title,
-                'cover' : base64_string,
+                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': book.published,
@@ -386,16 +382,14 @@ def seePurchases():
 
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
-    response = {}
+    response = []
     try:
         purchasy = model.Purchase.select().where(model.Purchase.user_id == userid)
         if purchasy:
-            response['pocet'] = len(purchasy)
-            response['purchasy'] = []
             for purchas in purchasy:
                 print(purchas.book_id)
                 kniha = model.Book.select().where(model.Book.id == purchas.book_id).get()
-                response['purchasy'].append({
+                response.append({
                     'title':kniha.title,
                     'datum':purchas.p_datetime,
                     'cena':kniha.price
@@ -433,12 +427,11 @@ def addReview():
 
 @app.route('/searchbook', methods=['GET'])
 def searchbook():
-    response= {}
+    response= []
     hladanie = request.args.get('hladanie',str)
     try:
         books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).where((model.Book.title.iregexp(hladanie))|(model.Author.name.iregexp(hladanie)))
-        response['pocet'] = len(books)
-        response['knihy'] = []
+
 
         for book in books:
             #Treba osetrit pripad ked jpg sa nenajde na serveri
@@ -449,10 +442,10 @@ def searchbook():
             base64_string = jpg_base64.decode('ascii')
 
             #if kategoria in book.genres:
-            response['knihy'].append({
+            response.append({
                 'id': book.id,
                 'title': book.title,
-                'cover' : base64_string,
+                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': book.published,
@@ -472,15 +465,14 @@ def searchbook():
 
 @app.route('/searchauthor', methods=['GET'])
 def searchauthor():
-    response={}
+    response=[]
     hladanie = request.args.get('hladanie',str)
     try:
         authors = model.Author.select().where(model.Author.name.iregexp(hladanie))
-        response['pocet'] = len(authors)
-        response['autory'] = []
+
 
         for author in authors:
-            response['autory'].append({
+            response.append({
                 'id': author.id,
                 'name': author.name,
             })
@@ -542,6 +534,7 @@ def getjpg():
     filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
     file=open(filename,"rb")
     bajty=file.read()
+    #jpg_base64 = base64.b64encode(bajty)
 
     return bajty
 
@@ -555,4 +548,5 @@ def getpdf():
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
     file=open(filename,"rb")
     bajty=file.read()
+    #jpg_base64 = base64.b64encode(bajty)
     return bajty
