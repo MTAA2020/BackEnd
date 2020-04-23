@@ -1,7 +1,7 @@
 import json
 import os
 import base64
-from flask import Flask, make_response, request, jsonify,render_template
+from flask import Flask, make_response, request, jsonify,render_template,send_file
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
@@ -498,10 +498,9 @@ def getBooksbycategory():
         for book in books:
             print(book.genres)
             #Treba osetrit pripad ked jpg sa nenajde na serveri
-           # filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
+            #filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
            # with open(filename, "rb") as imageFile:
             #    jpg_base64 = base64.b64encode(imageFile.read())
-
 
 
             #if kategoria in book.genres:
@@ -532,11 +531,10 @@ def getjpg():
     book_id = request.args.get('book_id',int)
 
     filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
-    file=open(filename,"rb")
-    bajty=file.read()
+
     #jpg_base64 = base64.b64encode(bajty)
 
-    return bajty
+    return send_file(filename)
 
 
 @app.route('/pdf', methods=['GET'])
@@ -546,7 +544,6 @@ def getpdf():
     book_id = request.args.get('book_id',int)
 
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-    file=open(filename,"rb")
-    bajty=file.read()
-    #jpg_base64 = base64.b64encode(bajty)
-    return bajty
+
+
+    return send_file(filename)
