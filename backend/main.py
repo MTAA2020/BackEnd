@@ -1,15 +1,14 @@
 import json
 import os
 import base64
-from flask import Flask, make_response, request, jsonify
+from flask import Flask, make_response, request, jsonify,render_template
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
 import model
 
-
-app = Flask(__name__)
+app = Flask(__name__,template_folder=os.getcwd().replace(os.sep, '/'))
 app.config['JWT_SECRET_KEY'] = 'supersecret'
 jwt = JWTManager(app)
 
@@ -498,28 +497,26 @@ def searchauthor():
 @app.route('/getBookCategory', methods=['GET'])
 def getBooksbycategory():
    
-    response = {}
+    response = []
     strana = request.args.get('strana',type=int)
     kategoria = request.args.get('kategoria',type=str)
     try:
         books = model.Book.select().where(model.Book.genres.contains(kategoria)).join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
-        response['pocet'] = len(books)
-        response['knihy'] = []
+
         for book in books:
             print(book.genres)
             #Treba osetrit pripad ked jpg sa nenajde na serveri
-            filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-            with open(filename, "rb") as imageFile:
-                jpg_base64 = base64.b64encode(imageFile.read())
+           # filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
+           # with open(filename, "rb") as imageFile:
+            #    jpg_base64 = base64.b64encode(imageFile.read())
 
-            base64_string = jpg_base64.decode('ascii')
+
 
             #if kategoria in book.genres:
-            response['knihy'].append({
+            response.append({
                 'id': book.id,
-                'title': book.title,
-                'cover' : base64_string,
                 'author': book.author.name,
+                'title': book.title,
                 'about': book.author.about,
                 'published': book.published,
                 'rating': book.rating,
@@ -528,7 +525,7 @@ def getBooksbycategory():
             })
 
         if books:
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:
@@ -540,24 +537,20 @@ def getBooksbycategory():
 @app.route('/jpg', methods=['GET'])
 def getjpg():
 
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
-
-    book_id = request.json.get('book_id',int)
+    book_id = request.args.get('book_id',int)
 
     filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
     file=open(filename,"rb")
     bajty=file.read()
+
     return bajty
 
 
 @app.route('/pdf', methods=['GET'])
 def getpdf():
 
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
 
-    book_id = request.json.get('book_id',int)
+    book_id = request.args.get('book_id',int)
 
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
     file=open(filename,"rb")
