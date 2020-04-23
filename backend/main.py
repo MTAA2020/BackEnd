@@ -56,7 +56,7 @@ def login():
             user = model.User.select().where(model.User.username == uname).get()
             if uname == user.username and passw == user.passwordhash:
                 access_token = create_access_token(identity=uname)
-                return jsonify({'access_token':access_token,'msg':'Success','balance':user.balance}), 200
+                return jsonify({'access_token':access_token,'msg':'Success','balance':user.balance,'admin':user.admin}), 200
         except:
             return jsonify({'msg': 'Wrong username or password'}), 403
         return jsonify({'msg': 'Wrong details'}) , 403
