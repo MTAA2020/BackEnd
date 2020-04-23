@@ -63,18 +63,20 @@ def login():
 
 #Funguje
 @app.route('/addAuthor', methods=['POST'])
-@jwt_required
+#@jwt_required
 def addAuthor():
     if not request.is_json:
             return jsonify({'msg': 'Bad Request format'}), 400
     
     author_name = request.json.get('name',str)
     author_about = request.json.get('about',str)
+    print(type(author_name))
+    print(type(author_about))
+    #current_user=get_jwt_identity()
+    #user = model.User.select().where(model.User.username == current_user).get()
 
-    current_user=get_jwt_identity()
-    user = model.User.select().where(model.User.username == current_user).get()
-
-    if user.admin is True:
+    #if user.admin is True:
+    if True:
         try:
             model.Author.create(name=author_name,about=author_about)
             return jsonify({'msg': 'success'}) , 201
@@ -435,11 +437,11 @@ def searchbook():
 
         for book in books:
             #Treba osetrit pripad ked jpg sa nenajde na serveri
-            filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-            with open(filename, "rb") as imageFile:
-                jpg_base64 = base64.b64encode(imageFile.read())
+            #filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
+            #with open(filename, "rb") as imageFile:
+            #    jpg_base64 = base64.b64encode(imageFile.read())
 
-            base64_string = jpg_base64.decode('ascii')
+            #base64_string = jpg_base64.decode('ascii')
 
             #if kategoria in book.genres:
             response.append({
@@ -453,8 +455,9 @@ def searchbook():
                 'price': book.price,
                 'genres': book.genres,
             })
+        print(response)
         if books:
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:
