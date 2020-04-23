@@ -496,12 +496,6 @@ def getBooksbycategory():
         books = model.Book.select().where(model.Book.genres.contains(kategoria)).join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
 
         for book in books:
-            print(book.genres)
-            #Treba osetrit pripad ked jpg sa nenajde na serveri
-            #filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-           # with open(filename, "rb") as imageFile:
-            #    jpg_base64 = base64.b64encode(imageFile.read())
-
 
             #if kategoria in book.genres:
             response.append({

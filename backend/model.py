@@ -1,7 +1,6 @@
 from peewee import *
 from playhouse.postgres_ext import *
 
-
 database = PostgresqlDatabase('postgres', **{'user': 'postgres', 'password': 'postgres'})
 
 class UnknownField(object):
