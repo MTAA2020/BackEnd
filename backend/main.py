@@ -6,6 +6,7 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
+from peewee import fn
 import model
 
 app = Flask(__name__,template_folder=os.getcwd().replace(os.sep, '/'))
@@ -256,23 +257,14 @@ def deposit():
 def getBooks():
    
     response = []
-    strana = request.args.get('strana',type=int)
 
     try:
-        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
+        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).order_by(fn.Random()).limit(5)
         for book in books:
-
-            #Treba osetrit pripad ked jpg sa nenajde na serveri
-            filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-            with open(filename, "rb") as imageFile:
-                jpg_base64 = base64.b64encode(imageFile.read())
-
-            base64_string = jpg_base64.decode('ascii')
 
             response.append({
                 'id': book.id,
                 'title': book.title,
-                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': book.published,
@@ -281,7 +273,7 @@ def getBooks():
                 'genres': book.genres,
             })
         if books:
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:
@@ -305,7 +297,7 @@ def getBookReviews():
                     'rating': review.rating,
                     'comment': review.comment
                 })
-            return jsonify({'msg':'Success','reviews':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more reviews'}), 204
     except:
@@ -327,16 +319,9 @@ def getMyBooks():
         if myBooks:
             for book in myBooks:
 
-                #Treba osetrit pripad ked jpg sa nenajde na serveri
-                filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-                with open(filename, "rb") as imageFile:
-                    jpg_base64 = base64.b64encode(imageFile.read())
-                base64_string = jpg_base64.decode('ascii')
-
                 response.append({
                 'id': book.id,
                 'title': book.title,
-                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': book.published,
@@ -344,7 +329,7 @@ def getMyBooks():
                 'price': book.price,
                 'genres': book.genres,
             })
-            return jsonify({'msg':'Success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:
@@ -394,7 +379,7 @@ def seePurchases():
                     'datum':purchas.p_datetime,
                     'cena':kniha.price
                 })
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No purchases'}), 204
     except:
@@ -432,20 +417,11 @@ def searchbook():
     try:
         books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).where((model.Book.title.iregexp(hladanie))|(model.Author.name.iregexp(hladanie)))
 
-
         for book in books:
-            #Treba osetrit pripad ked jpg sa nenajde na serveri
-            #filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-            #with open(filename, "rb") as imageFile:
-            #    jpg_base64 = base64.b64encode(imageFile.read())
 
-            #base64_string = jpg_base64.decode('ascii')
-
-            #if kategoria in book.genres:
             response.append({
                 'id': book.id,
                 'title': book.title,
-                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': str(book.published),
@@ -478,7 +454,7 @@ def searchauthor():
                 'name': author.name,
             })
         if authors:
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:
