@@ -150,15 +150,16 @@ def bookEdit():
     date = request.json.get('date',None)
     price = request.json.get('price',float)
     genres = request.json.get('genres',None)
-
     current_user=get_jwt_identity()
     user = model.User.select().where(model.User.username == current_user).get()
     authorobj=model.Author.select().where(model.Author.name == name).get()
+    print(type(genres))
+    print(genres)
 
     if user.admin is True:
         try:
             book=model.Book.select().where(model.Book.id == book_id).get()
-            book.name=authorobj
+            book.author_id=authorobj.id
             book.title=title
             book.published=date
             book.price=price
