@@ -1,6 +1,7 @@
 import json
 import os
 import base64
+from datetime import datetime
 from flask import Flask, make_response, request, jsonify,render_template,send_file
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
@@ -208,7 +209,7 @@ def purchase():
             return jsonify({'msg': 'Bad Request format'}), 400
 
     book_id = request.json.get('book_id',None)
-    date = request.json.get('date',None)
+    date = datetime.now()
 
     current_user=get_jwt_identity()
     userobj = model.User.select().where(model.User.username == current_user).get()
@@ -240,7 +241,7 @@ def deposit():
             return jsonify({'msg': 'Bad Request format'}), 400
 
     amount = request.json.get('amount',None)
-    date = request.json.get('date',None)
+    date = datetime.now()
 
     current_user=get_jwt_identity()
     userobj = model.User.select().where(model.User.username == current_user).get()
@@ -261,7 +262,6 @@ def deposit():
 def getBooks():
    
     response = []
-
     try:
         books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).order_by(fn.Random()).limit(5)
         for book in books:
@@ -292,11 +292,12 @@ def getBookReviews():
     response = []
     strana = request.args.get('strana',type=int)
     try:
-        reviews = model.Review.select().where(model.Review.book_id == bookid).paginate(strana,10)
+        reviews = model.Review.select().join(model.User, on=(model.User.id == model.Review.user_id)).where(model.Review.book_id == bookid).paginate(strana,10)
 
         if reviews:
             for review in reviews:
                 response.append({
+                    'user': review.user_id.username,
                     'time': review.time,
                     'rating': review.rating,
                     'comment': review.comment
@@ -399,7 +400,7 @@ def addReview():
     book_id = request.json.get('book_id',int)
     comment = request.json.get('comment',str)
     rating = request.json.get('rating',None)
-    time = request.json.get('time',None)
+    time = datetime.now()
 
     current_user=get_jwt_identity()
     userobj = model.User.select().where(model.User.username == current_user).get()
