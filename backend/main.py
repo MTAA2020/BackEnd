@@ -450,7 +450,7 @@ def searchbook():
                 #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
-                'published': book.published,
+                'published': str(book.published),
                 'rating': book.rating,
                 'price': book.price,
                 'genres': book.genres,
