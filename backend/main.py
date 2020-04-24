@@ -123,22 +123,33 @@ def addBook():
 @jwt_required
 def addPDF():
     data=request.get_data()
-    
-    book_id=data[-8:]
-    book_id=int.from_bytes( book_id, "big", signed=False )
-    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-
+    try:
+        book_id=data[0,8]
+        book_id=int.from_bytes( book_id, "big", signed=False )
+        filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
+        f = open(filename, 'wb')
+        f.write(data[8:])
+        f.close()
+        return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
+    except:
+        return jsonify({'msg': 'Something went wrong'}) , 400
 
 #Treba urobit
 @app.route('/addjpg', methods=['POST'])
 @jwt_required
 def addJPG():
     data=request.get_data()
+    try:
+        book_id=data[0,8]
+        book_id=int.from_bytes( book_id, "big", signed=False )
+        filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
+        f = open(filename, 'wb')
+        f.write(data[8:])
+        f.close()
+        return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
+    except:
+        return jsonify({'msg': 'Something went wrong'}) , 400
     
-    book_id=data[-8:]
-    book_id=int.from_bytes( book_id, "big", signed=False )
-    filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
-
 
 
 
