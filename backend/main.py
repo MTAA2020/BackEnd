@@ -30,7 +30,11 @@ def registration():
     uname = request.json.get('username',str)
     passw = request.json.get('password', str)
     email = request.json.get('email',str)
-    admin = request.json.get('admin',bool)
+    admin = request.json.get('admin',int)
+    if admin == 1:
+        admin =True
+    else:
+        admin=False
 
     try: 
         userid=model.User.create(username=uname,passwordhash=passw,email=email,balance=0,admin=admin)
