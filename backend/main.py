@@ -176,11 +176,8 @@ def bookEdit():
 @app.route('/bookDelete', methods=['DELETE'])
 @jwt_required
 def bookDelete():
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
-
-    bookid = request.json.get('book_id',None)
-
+    bookid = request.args.get('book_id',None)
+    print(bookid)
     current_user=get_jwt_identity()
     user = model.User.select().where(model.User.username == current_user).get()
     
