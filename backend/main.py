@@ -69,7 +69,7 @@ def login():
 
 #Funguje
 @app.route('/addAuthor', methods=['POST'])
-#@jwt_required
+@jwt_required
 def addAuthor():
     if not request.is_json:
             return jsonify({'msg': 'Bad Request format'}), 400
@@ -78,11 +78,10 @@ def addAuthor():
     author_about = request.json.get('about',str)
     print(type(author_name))
     print(type(author_about))
-    #current_user=get_jwt_identity()
-    #user = model.User.select().where(model.User.username == current_user).get()
+    current_user=get_jwt_identity()
+    user = model.User.select().where(model.User.username == current_user).get()
 
-    #if user.admin is True:
-    if True:
+    if user.admin is True:
         try:
             model.Author.create(name=author_name,about=author_about)
             return jsonify({'msg': 'success'}) , 201
@@ -111,7 +110,7 @@ def addBook():
         try:
             auth = model.Author.select().where(model.Author.name == authorname).get()
             bookobj = model.Book.create(author=auth,title=title,published=date,rating=0,price=price,genres=genres)
-            return jsonify({'msg': 'Success',"book_id" : str(bookobj.id)}) , 201
+            return jsonify({'msg': 'Success',"book_id" : bookobj.id}) , 201
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
     else:
@@ -123,9 +122,8 @@ def addBook():
 @jwt_required
 def addPDF():
     data=request.get_data()
+    book_id = request.json.get('book_id',int)
     try:
-        book_id=data[0,8]
-        book_id=int.from_bytes( book_id, "big", signed=False )
         filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
         with open(filename, 'wb') as w:
             w.write(data)
@@ -139,14 +137,16 @@ def addPDF():
 @jwt_required
 def addJPG():
     data=request.get_data()
+    #book_id = request.json.get('book_id',None)
+    subor = request.files['file']
+    #data = request.json.get('data',bytearray)
     try:
-        book_id=data[0,8]
-        book_id=int.from_bytes( book_id, "big", signed=False )
-        filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
-        with open(filename, 'wb') as w:
-            w.write(data[8:])
+        filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(request.form['book_id'])+".jpg"
+        subor.save(filename)
+        #with open(filename, 'w') as w:
+        #    w.write(request.files['file'])
 
-        return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
+        return jsonify({'msg': 'Success',"book_id" : str(request.form['book_id'])}) , 201
     except:
         return jsonify({'msg': 'Something went wrong'}) , 400
     
