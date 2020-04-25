@@ -12,6 +12,7 @@ import model
 
 app = Flask(__name__,template_folder=os.getcwd().replace(os.sep, '/'))
 app.config['JWT_SECRET_KEY'] = 'supersecret'
+app.config['JWT_EXPIRATION_DELTA'] = False
 jwt = JWTManager(app)
 
 @app.route('/')
@@ -61,7 +62,7 @@ def login():
         try:
             user = model.User.select().where(model.User.username == uname).get()
             if uname == user.username and passw == user.passwordhash:
-                access_token = create_access_token(identity=uname,expires_delta=false)
+                access_token = create_access_token(identity=uname)
                 return jsonify({'access_token':access_token,'msg':'Success','balance':user.balance,'admin':user.admin}), 200
         except:
             return jsonify({'msg': 'Wrong username or password'}), 403
