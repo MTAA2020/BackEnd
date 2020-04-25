@@ -539,18 +539,14 @@ def getjpg():
 
     filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
 
-    #jpg_base64 = base64.b64encode(bajty)
-
     return send_file(filename)
 
 
 @app.route('/pdf', methods=['GET'])
 def getpdf():
 
-
     book_id = request.args.get('book_id',int)
 
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-
 
     return send_file(filename)
