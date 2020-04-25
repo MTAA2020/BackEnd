@@ -446,12 +446,14 @@ def addReview():
         except:
             return jsonify({'msg': 'Something went wrong'}) , 400
 
+
+
 @app.route('/searchbook', methods=['GET'])
 def searchbook():
     response= []
     hladanie = request.args.get('hladanie',str)
     try:
-        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).where((model.Book.title.iregexp(hladanie))|(model.Author.name.iregexp(hladanie)))
+        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).where((model.Book.title.iregexp(hladanie))|(model.Author.name.iregexp(hladanie))).limit(40)
 
         for book in books:
 
@@ -465,7 +467,6 @@ def searchbook():
                 'price': book.price,
                 'genres': book.genres,
             })
-        print(response)
         if books:
             return jsonify(response), 200
         else:
