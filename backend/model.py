@@ -65,8 +65,8 @@ class Review(BaseModel):
     book_id = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
     user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
     time = DateTimeField(null=True)
-    rating = DoubleField(null=True)
-    comment = TextField(null=True)
+    rating = DoubleField()
+    comment = TextField()
 
     class Meta:
         table_name = 'review'

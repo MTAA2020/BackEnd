@@ -127,9 +127,9 @@ def addPDF():
         book_id=data[0,8]
         book_id=int.from_bytes( book_id, "big", signed=False )
         filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-        f = open(filename, 'wb')
-        f.write(data[8:])
-        f.close()
+        with open(filename, 'wb') as w:
+            w.write(data)
+        
         return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
     except:
         return jsonify({'msg': 'Something went wrong'}) , 400
@@ -143,9 +143,9 @@ def addJPG():
         book_id=data[0,8]
         book_id=int.from_bytes( book_id, "big", signed=False )
         filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
-        f = open(filename, 'wb')
-        f.write(data[8:])
-        f.close()
+        with open(filename, 'wb') as w:
+            w.write(data[8:])
+
         return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
     except:
         return jsonify({'msg': 'Something went wrong'}) , 400
@@ -381,19 +381,21 @@ def readBook():
 @jwt_required
 def seePurchases():
 
+    strana=request.args.get('strana',int)
+    
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
     response = []
     try:
-        purchasy = model.Purchase.select().where(model.Purchase.user_id == userid)
+        purchasy = model.Purchase.select().where(model.Purchase.user_id == userid).paginate(strana,10)
         if purchasy:
             for purchas in purchasy:
                 print(purchas.book_id)
                 kniha = model.Book.select().where(model.Book.id == purchas.book_id).get()
                 response.append({
                     'title':kniha.title,
-                    'datum':purchas.p_datetime,
-                    'cena':kniha.price
+                    'date':purchas.p_datetime,
+                    'price':kniha.price
                 })
             return jsonify(response), 200
         else:
@@ -402,7 +404,7 @@ def seePurchases():
         return jsonify({'msg':'Something went wrong'}), 400
 
 #Funguje
-@app.route('/addReview', methods=['POST'])
+@app.route('/addReview', methods=['PUT'])
 @jwt_required
 def addReview():
     if not request.is_json:
@@ -418,7 +420,12 @@ def addReview():
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
     
     try:
-        model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
+        review=model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
+        review.rating=rating
+        review.comment=comment
+        review.time=time
+        review.save()
+        return jsonify({'msg': 'Success'}), 200
     except:
         try:
             newreview=model.Review.create(user_id=userobj,book_id=bookobj,time=time,comment=comment,rating=rating)
