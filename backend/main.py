@@ -136,16 +136,10 @@ def addPDF():
 @app.route('/addjpg', methods=['POST'])
 @jwt_required
 def addJPG():
-    data=request.get_data()
-    #book_id = request.json.get('book_id',None)
     subor = request.files['file']
-    #data = request.json.get('data',bytearray)
     try:
         filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(request.form['book_id'])+".jpg"
         subor.save(filename)
-        #with open(filename, 'w') as w:
-        #    w.write(request.files['file'])
-
         return jsonify({'msg': 'Success',"book_id" : str(request.form['book_id'])}) , 201
     except:
         return jsonify({'msg': 'Something went wrong'}) , 400
