@@ -61,7 +61,7 @@ def login():
         try:
             user = model.User.select().where(model.User.username == uname).get()
             if uname == user.username and passw == user.passwordhash:
-                access_token = create_access_token(identity=uname)
+                access_token = create_access_token(identity=uname,expires_delta=false)
                 return jsonify({'access_token':access_token,'msg':'Success','balance':user.balance,'admin':user.admin}), 200
         except:
             return jsonify({'msg': 'Wrong username or password'}), 403
@@ -121,14 +121,12 @@ def addBook():
 @app.route('/addpdf', methods=['POST'])
 @jwt_required
 def addPDF():
-    data=request.get_data()
-    book_id = request.json.get('book_id',int)
+    subor = request.files['file']
     try:
-        filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-        with open(filename, 'wb') as w:
-            w.write(data)
+        filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(request.form['book_id'])+".pdf"
+        subor.save(filename)
         
-        return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
+        return jsonify({'msg': 'Success',"book_id" : str(request.form['book_id'])}) , 201
     except:
         return jsonify({'msg': 'Something went wrong'}) , 400
 
