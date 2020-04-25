@@ -1,11 +1,13 @@
 import json
 import os
 import base64
+from datetime import datetime
 from flask import Flask, make_response, request, jsonify,render_template,send_file
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
+from peewee import fn
 import model
 
 app = Flask(__name__,template_folder=os.getcwd().replace(os.sep, '/'))
@@ -29,7 +31,11 @@ def registration():
     uname = request.json.get('username',str)
     passw = request.json.get('password', str)
     email = request.json.get('email',str)
-    admin = request.json.get('admin',bool)
+    admin = request.json.get('admin',int)
+    if admin == 1:
+        admin =True
+    else:
+        admin=False
 
     try: 
         userid=model.User.create(username=uname,passwordhash=passw,email=email,balance=0,admin=admin)
@@ -117,22 +123,33 @@ def addBook():
 @jwt_required
 def addPDF():
     data=request.get_data()
-    
-    book_id=data[-8:]
-    book_id=int.from_bytes( book_id, "big", signed=False )
-    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-
+    try:
+        book_id=data[0,8]
+        book_id=int.from_bytes( book_id, "big", signed=False )
+        filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
+        with open(filename, 'wb') as w:
+            w.write(data)
+        
+        return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
+    except:
+        return jsonify({'msg': 'Something went wrong'}) , 400
 
 #Treba urobit
 @app.route('/addjpg', methods=['POST'])
 @jwt_required
 def addJPG():
     data=request.get_data()
-    
-    book_id=data[-8:]
-    book_id=int.from_bytes( book_id, "big", signed=False )
-    filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
+    try:
+        book_id=data[0,8]
+        book_id=int.from_bytes( book_id, "big", signed=False )
+        filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
+        with open(filename, 'wb') as w:
+            w.write(data[8:])
 
+        return jsonify({'msg': 'Success',"book_id" : str(book_id)}) , 201
+    except:
+        return jsonify({'msg': 'Something went wrong'}) , 400
+    
 
 
 
@@ -203,7 +220,7 @@ def purchase():
             return jsonify({'msg': 'Bad Request format'}), 400
 
     book_id = request.json.get('book_id',None)
-    date = request.json.get('date',None)
+    date = datetime.now()
 
     current_user=get_jwt_identity()
     userobj = model.User.select().where(model.User.username == current_user).get()
@@ -235,7 +252,7 @@ def deposit():
             return jsonify({'msg': 'Bad Request format'}), 400
 
     amount = request.json.get('amount',None)
-    date = request.json.get('date',None)
+    date = datetime.now()
 
     current_user=get_jwt_identity()
     userobj = model.User.select().where(model.User.username == current_user).get()
@@ -256,23 +273,13 @@ def deposit():
 def getBooks():
    
     response = []
-    strana = request.args.get('strana',type=int)
-
     try:
-        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).paginate(strana,10)
+        books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).order_by(fn.Random()).limit(5)
         for book in books:
-
-            #Treba osetrit pripad ked jpg sa nenajde na serveri
-            filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-            with open(filename, "rb") as imageFile:
-                jpg_base64 = base64.b64encode(imageFile.read())
-
-            base64_string = jpg_base64.decode('ascii')
 
             response.append({
                 'id': book.id,
                 'title': book.title,
-                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': book.published,
@@ -281,7 +288,7 @@ def getBooks():
                 'genres': book.genres,
             })
         if books:
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:
@@ -296,16 +303,17 @@ def getBookReviews():
     response = []
     strana = request.args.get('strana',type=int)
     try:
-        reviews = model.Review.select().where(model.Review.book_id == bookid).paginate(strana,10)
+        reviews = model.Review.select().join(model.User, on=(model.User.id == model.Review.user_id)).where(model.Review.book_id == bookid).paginate(strana,10)
 
         if reviews:
             for review in reviews:
                 response.append({
+                    'user': review.user_id.username,
                     'time': review.time,
                     'rating': review.rating,
                     'comment': review.comment
                 })
-            return jsonify({'msg':'Success','reviews':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more reviews'}), 204
     except:
@@ -327,16 +335,9 @@ def getMyBooks():
         if myBooks:
             for book in myBooks:
 
-                #Treba osetrit pripad ked jpg sa nenajde na serveri
-                filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-                with open(filename, "rb") as imageFile:
-                    jpg_base64 = base64.b64encode(imageFile.read())
-                base64_string = jpg_base64.decode('ascii')
-
                 response.append({
                 'id': book.id,
                 'title': book.title,
-                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': book.published,
@@ -344,7 +345,7 @@ def getMyBooks():
                 'price': book.price,
                 'genres': book.genres,
             })
-            return jsonify({'msg':'Success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:
@@ -380,28 +381,30 @@ def readBook():
 @jwt_required
 def seePurchases():
 
+    strana=request.args.get('strana',int)
+    
     current_user = get_jwt_identity()
     userid = model.User.get(model.User.username == current_user).id
     response = []
     try:
-        purchasy = model.Purchase.select().where(model.Purchase.user_id == userid)
+        purchasy = model.Purchase.select().where(model.Purchase.user_id == userid).paginate(strana,10)
         if purchasy:
             for purchas in purchasy:
                 print(purchas.book_id)
                 kniha = model.Book.select().where(model.Book.id == purchas.book_id).get()
                 response.append({
                     'title':kniha.title,
-                    'datum':purchas.p_datetime,
-                    'cena':kniha.price
+                    'date':purchas.p_datetime,
+                    'price':kniha.price
                 })
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No purchases'}), 204
     except:
         return jsonify({'msg':'Something went wrong'}), 400
 
 #Funguje
-@app.route('/addReview', methods=['POST'])
+@app.route('/addReview', methods=['PUT'])
 @jwt_required
 def addReview():
     if not request.is_json:
@@ -410,14 +413,19 @@ def addReview():
     book_id = request.json.get('book_id',int)
     comment = request.json.get('comment',str)
     rating = request.json.get('rating',None)
-    time = request.json.get('time',None)
+    time = datetime.now()
 
     current_user=get_jwt_identity()
     userobj = model.User.select().where(model.User.username == current_user).get()
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
     
     try:
-        model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
+        review=model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
+        review.rating=rating
+        review.comment=comment
+        review.time=time
+        review.save()
+        return jsonify({'msg': 'Success'}), 200
     except:
         try:
             newreview=model.Review.create(user_id=userobj,book_id=bookobj,time=time,comment=comment,rating=rating)
@@ -432,20 +440,11 @@ def searchbook():
     try:
         books = model.Book.select().join(model.Author, on=(model.Author.id == model.Book.author)).where((model.Book.title.iregexp(hladanie))|(model.Author.name.iregexp(hladanie)))
 
-
         for book in books:
-            #Treba osetrit pripad ked jpg sa nenajde na serveri
-            #filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book.id)+".jpg"
-            #with open(filename, "rb") as imageFile:
-            #    jpg_base64 = base64.b64encode(imageFile.read())
 
-            #base64_string = jpg_base64.decode('ascii')
-
-            #if kategoria in book.genres:
             response.append({
                 'id': book.id,
                 'title': book.title,
-                #'cover' : base64_string,
                 'author': book.author.name,
                 'about': book.author.about,
                 'published': str(book.published),
@@ -478,7 +477,7 @@ def searchauthor():
                 'name': author.name,
             })
         if authors:
-            return jsonify({'msg':'success','knihy':response}), 200
+            return jsonify(response), 200
         else:
             return jsonify({'msg':'No more entries'}), 204
     except:

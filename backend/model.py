@@ -45,7 +45,7 @@ class Deposit(BaseModel):
     id = IdentityField(null=True,unique=True)
     amount = DoubleField(null=True)
     user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
-    d_datetime=DateField(null=True)
+    d_datetime=DateTimeField(null=True)
 
     class Meta:
         table_name = 'deposit'
@@ -54,7 +54,7 @@ class Deposit(BaseModel):
 class Purchase(BaseModel):
     id = IdentityField(null=True,unique=True)
     book_id = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
-    p_datetime = DateField(null=True)
+    p_datetime = DateTimeField(null=True)
     user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
 
     class Meta:
@@ -64,9 +64,9 @@ class Review(BaseModel):
     id = IdentityField(null=True,unique=True)
     book_id = ForeignKeyField(column_name='book_id', field='id', model=Book, null=True)
     user_id = ForeignKeyField(column_name='user_id', field='id', model=User, null=True)
-    time = DateField(null=True)
-    rating = DoubleField(null=True)
-    comment = TextField(null=True)
+    time = DateTimeField(null=True)
+    rating = DoubleField()
+    comment = TextField()
 
     class Meta:
         table_name = 'review'
