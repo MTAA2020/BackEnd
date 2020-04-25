@@ -151,6 +151,7 @@ def addJPG():
 @app.route('/bookEdit', methods=['PUT'])
 @jwt_required
 def bookEdit():
+    print(request)
     if not request.is_json:
             return jsonify({'msg': 'Wrong format'}), 400
 
