@@ -1,7 +1,7 @@
 import json
 import os
 import base64
-from datetime import datetime,timedelta
+from datetime import datetime
 from flask import Flask, make_response, request, jsonify,render_template,send_file
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
@@ -9,7 +9,6 @@ from flask_jwt_extended import (
 )
 from peewee import fn
 import model
-
 
 app = Flask(__name__,template_folder=os.getcwd().replace(os.sep, '/'))
 app.config['JWT_SECRET_KEY'] = 'supersecret'
@@ -240,7 +239,6 @@ def purchase():
     return jsonify({'code':'3','msg':'You have already bought this book'}), 406
 
 
-
 @app.route('/isbought', methods=['GET'])
 @jwt_required
 def isbought():
@@ -255,7 +253,7 @@ def isbought():
     except:
         return jsonify({'code':'3', 'msg': 'You dont have this book'}), 200
 
-
+            
 #Funguje
 @app.route('/deposit', methods=['POST'])
 @jwt_required
@@ -536,15 +534,23 @@ def getBooksbycategory():
 
 @app.route('/jpg', methods=['GET'])
 def getjpg():
+
     book_id = request.args.get('book_id',int)
+
     filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
+
+    #jpg_base64 = base64.b64encode(bajty)
 
     return send_file(filename)
 
 
 @app.route('/pdf', methods=['GET'])
 def getpdf():
+
+
     book_id = request.args.get('book_id',int)
+
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
+
 
     return send_file(filename)
