@@ -1,7 +1,7 @@
 import json
 import os
 import base64
-from datetime import datetime
+from datetime import datetime,timedelta
 from flask import Flask, make_response, request, jsonify,render_template,send_file
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
@@ -9,6 +9,7 @@ from flask_jwt_extended import (
 )
 from peewee import fn
 import model
+
 
 app = Flask(__name__,template_folder=os.getcwd().replace(os.sep, '/'))
 app.config['JWT_SECRET_KEY'] = 'supersecret'
@@ -236,14 +237,31 @@ def purchase():
                 userobj.balance=new_balance
                 userobj.save()
                 if purchase:
-                    return jsonify({'msg': 'Success'}), 201
+                    return jsonify({'code':'1','msg': 'Success'}), 201
             except:
                 return jsonify({'msg': "Couldn't create purchase"}), 500
     else:
-        return jsonify({'msg':'Not enough credit'}), 406
+        return jsonify({'code':'2','msg':'No Credit'}), 406
     
-    return jsonify({'msg':'You have already bought this book'}), 406
-            
+    return jsonify({'code':'3','msg':'You have already bought this book'}), 406
+
+
+
+@app.route('/isbought', methods=['GET'])
+@jwt_required
+def isbought():
+    current_user=get_jwt_identity()
+    book_id=request.args.get('book_id')
+    userobj = model.User.select().where(model.User.username == current_user).get()
+    bookobj = model.Book.select().where(model.Book.id == book_id).get()
+
+    try:
+        tmp=model.Purchase.select().where(model.Purchase.book_id == bookobj, model.Purchase.user_id == userobj).get()
+        return jsonify({'code':'1','msg':"You have this book"}), 200
+    except:
+        return jsonify({'code':'3', 'msg': 'You dont have this book'}), 200
+
+
 #Funguje
 @app.route('/deposit', methods=['POST'])
 @jwt_required
@@ -419,15 +437,18 @@ def addReview():
     userobj = model.User.select().where(model.User.username == current_user).get()
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
     
+
     try:
         review=model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
-        review.rating=rating
+        if rating != "0.0":
+            review.rating=rating
+        
         review.comment=comment
         review.time=time
         review.save()
         return jsonify({'msg': 'Success'}), 200
     except:
-        try:
+        try:   
             newreview=model.Review.create(user_id=userobj,book_id=bookobj,time=time,comment=comment,rating=rating)
             return jsonify({'msg': 'Success'}), 200
         except:
@@ -521,23 +542,15 @@ def getBooksbycategory():
 
 @app.route('/jpg', methods=['GET'])
 def getjpg():
-
     book_id = request.args.get('book_id',int)
-
     filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
-
-    #jpg_base64 = base64.b64encode(bajty)
 
     return send_file(filename)
 
 
 @app.route('/pdf', methods=['GET'])
 def getpdf():
-
-
     book_id = request.args.get('book_id',int)
-
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-
 
     return send_file(filename)
