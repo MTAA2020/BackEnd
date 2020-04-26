@@ -370,7 +370,7 @@ def getMyBooks():
 def getbalance():
 
     current_user=get_jwt_identity()
-    
+
     try:
         userobj = model.User.select().where(model.User.username == current_user).get()
         currentbalance=float(userobj.balance)
@@ -441,6 +441,8 @@ def addReview():
     userobj = model.User.select().where(model.User.username == current_user).get()
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
     
+    
+
 
     try:
         review=model.Review.select().where(model.Review.book_id == bookobj, model.Review.user_id == userobj).get()
@@ -450,6 +452,18 @@ def addReview():
         review.comment=comment
         review.time=time
         review.save()
+
+
+        allreviews=model.Review.select().where(model.Review.book_id == bookobj)
+        numberofreviews=0
+        totalrating=0
+        for rev in allreviews:
+            numberofreviews+=1
+            totalrating+=rev.rating
+        
+        bookobj.rating=totalrating/numberofreviews
+        bookobj.save()
+
         return jsonify({'msg': 'Success'}), 200
     except:
         try:   
