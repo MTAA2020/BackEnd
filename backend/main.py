@@ -373,9 +373,6 @@ def getMyBooks():
     return jsonify({'msg': 'Sorry, something went wrong'}), 400
 
 
-<<<<<<< HEAD
-# Funguje
-=======
 #Funguje    
 @app.route('/getMyReview', methods=['GET'])
 @jwt_required
@@ -397,7 +394,6 @@ def getmyreview():
 
 
 #Funguje
->>>>>>> e9e0b3caaed86f9bf82815984ef02d0bf9a0d8a4
 @app.route('/getbalance', methods=['GET'])
 @jwt_required
 def getbalance():
