@@ -554,7 +554,6 @@ def getjpg():
     return send_file(filename)
     
 
-
 @app.route('/pdf', methods=['GET'])
 def getpdf():
 
@@ -562,4 +561,4 @@ def getpdf():
 
     filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
 
-    return send_file(filename)
+    return send_file(filename,mimetype='text/pdf')
