@@ -145,8 +145,6 @@ def addJPG():
     
 
 
-
-
 #Funguje            
 @app.route('/bookEdit', methods=['PUT'])
 @jwt_required
@@ -213,12 +211,13 @@ def purchase():
     if not request.is_json:
             return jsonify({'msg': 'Bad Request format'}), 400
 
-    book_id = request.json.get('book_id',None)
+    book_id = request.json.get('book_id',int)
     date = datetime.now()
 
     current_user=get_jwt_identity()
     userobj = model.User.select().where(model.User.username == current_user).get()
     bookobj = model.Book.select().where(model.Book.id == book_id).get()
+
 
     if userobj.balance > bookobj.price:
         try:
@@ -379,28 +378,6 @@ def getbalance():
         return jsonify({'msg':'Sorry something went wrong'}), 400
 
 
-
-
-#Treba upravit
-@app.route('/readBook', methods=['GET'])
-@jwt_required
-def readBook():
-    if not request.is_json:
-            return jsonify({'msg': 'Bad Request format'}), 400
-    
-    book_id = request.json.get('book_id',None)
-
-    current_user=get_jwt_identity()
-    user = model.User.select().where(model.User.username == current_user).get()
-    #Neviem ci treba najprv zistit ci user uz kupil knihu alebo nie,tlacitko na readbook aj tak bude dostupny iba vtedy.
-
-    filename=os.getcwd().replace(os.sep, '/')+"/PDF/book_"+str(book_id)+".pdf"
-    with open(filename, "rb") as pdfFile:
-        jpg_base64 = base64.b64encode(pdfFile.read())
-
-    base64_string = jpg_base64.decode('ascii')
-
-    return jsonify({'pdf': base64_string}), 200
 
 #Funguje           
 @app.route('/seePurchases', methods=['GET'])
@@ -573,6 +550,7 @@ def getjpg():
         file = open(filename, "rb")
     except:
         filename=os.getcwd().replace(os.sep, '/')+"/JPG/404.jpg"
+
     return send_file(filename)
     
 
