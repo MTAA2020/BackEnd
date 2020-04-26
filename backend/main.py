@@ -486,9 +486,13 @@ def searchauthor():
 
 
         for author in authors:
+            print(author.id)
+            print(author.name)
+            print(author.about)
             response.append({
                 'id': author.id,
                 'name': author.name,
+                'about': author.about
             })
         if authors:
             return jsonify(response), 200
@@ -539,8 +543,12 @@ def getjpg():
     book_id = request.args.get('book_id',int)
 
     filename=os.getcwd().replace(os.sep, '/')+"/JPG/book_"+str(book_id)+".jpg"
-
+    try:
+        file = open(filename, "rb")
+    except:
+        filename=os.getcwd().replace(os.sep, '/')+"/JPG/404.jpg"
     return send_file(filename)
+    
 
 
 @app.route('/pdf', methods=['GET'])
