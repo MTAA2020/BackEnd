@@ -390,22 +390,18 @@ def readBook():
 @app.route('/seePurchases', methods=['GET'])
 @jwt_required
 def seePurchases():
-
-    strana=request.args.get('strana',int)
-    
-    current_user = get_jwt_identity()
-    userid = model.User.get(model.User.username == current_user).id
+    strana=request.args.get('strana',type=int)
+    current_user=get_jwt_identity()
+    userobj = model.User.select().where(model.User.username == current_user).get()
     response = []
     try:
-        purchasy = model.Purchase.select().where(model.Purchase.user_id == userid).paginate(strana,10)
-        if purchasy:
-            for purchas in purchasy:
-                print(purchas.book_id)
-                kniha = model.Book.select().where(model.Book.id == purchas.book_id).get()
+        purchases = model.Purchase.select().join(model.Book, on=(model.Book.id == model.Purchase.book_id)).where(model.Purchase.user_id == userobj).paginate(strana,10)
+        if purchases:
+            for purchase in purchases:
                 response.append({
-                    'title':kniha.title,
-                    'date':purchas.p_datetime,
-                    'price':kniha.price
+                    'title': purchase.book_id.title,
+                    'date': purchase.p_datetime,
+                    'price': purchase.book_id.price
                 })
             return jsonify(response), 200
         else:
