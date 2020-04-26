@@ -362,6 +362,25 @@ def getMyBooks():
     return jsonify({'msg':'Sorry, something went wrong'}),400
 
 
+#Funguje    
+@app.route('/getMyReview', methods=['GET'])
+@jwt_required
+def getmyreview():
+
+    bookid = request.args.get('book_id',type=int)
+    current_user = get_jwt_identity()
+    try:
+        review = model.Review.select().join(model.User, on=(model.User.id == model.Review.user_id)).where(model.Review.book_id == bookid,model.User.username == current_user).get()
+
+        if review:
+            return jsonify({'code': '1','rating': review.rating,'comment':review.comment}), 200
+        else:
+            return jsonify({'code': '3','msg': 'you have no review'}), 204
+    except:
+        return jsonify({'code': '3','msg': 'you have no review'}), 204
+
+    return jsonify({'msg':'Sorry, something went wrong'}),400
+
 
 #Funguje
 @app.route('/getbalance', methods=['GET'])
