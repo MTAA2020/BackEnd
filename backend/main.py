@@ -274,7 +274,7 @@ def deposit():
         userobj.balance=new_balance
         userobj.save()
         if deposit:
-            return jsonify({'msg':'Success'}), 200
+            return jsonify({'msg':'Success','balance': new_balance}), 200
     except:
         return jsonify({'msg':'Sorry something went wrong'}), 400
 
