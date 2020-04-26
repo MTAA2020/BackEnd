@@ -364,6 +364,22 @@ def getMyBooks():
 
 
 
+#Funguje
+@app.route('/getbalance', methods=['GET'])
+@jwt_required
+def getbalance():
+
+    current_user=get_jwt_identity()
+    
+    try:
+        userobj = model.User.select().where(model.User.username == current_user).get()
+        currentbalance=float(userobj.balance)
+        return jsonify({'balance': currentbalance}), 200
+    except:
+        return jsonify({'msg':'Sorry something went wrong'}), 400
+
+
+
 
 #Treba upravit
 @app.route('/readBook', methods=['GET'])
